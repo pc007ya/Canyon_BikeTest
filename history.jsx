@@ -43,6 +43,7 @@ function HistoryPage({ lang, t }) {
     test: lang === "zh" ? "測試項目" : "Test",
     vendor: lang === "zh" ? "供應商" : "Vendor",
     fixture: lang === "zh" ? "制具" : "Fixture",
+    equipment: lang === "zh" ? "設備" : "Equipment",
     system: lang === "zh" ? "系統" : "System",
   }[e] || e);
 
@@ -83,6 +84,9 @@ function HistoryPage({ lang, t }) {
       </section>
 
       <section className="list-section">
+        <div className="hist-layout">
+          <aside className="hist-side"><SupplierNotifiedPanel lang={lang} actionLabel={actionLabel} entityLabel={entityLabel} /></aside>
+          <div className="hist-main">
         {log.length === 0 ? (
           <div className="empty">
             <Icon name="clock" size={30} />
@@ -115,8 +119,99 @@ function HistoryPage({ lang, t }) {
               </div>
             ))}
           </div>
-        )}
+          )}
+          </div>
+          <aside className="hist-side"><LoginRecordsPanel lang={lang} /></aside>
+        </div>
       </section>
+    </div>
+  );
+}
+
+/* ---------- Left panel: recent changes that were pushed to suppliers
+   (test items / fixtures / equipment — these are exactly what drive the
+   supplier-facing recount alerts) ---------- */
+const SP_ENTITIES = ["test", "fixture", "equipment"];
+function SupplierNotifiedPanel({ lang, actionLabel, entityLabel }) {
+  const [, bump] = hState(0);
+  hEffect(() => {
+    const h = () => bump((n) => n + 1);
+    window.addEventListener("bff:datachange", h);
+    return () => window.removeEventListener("bff:datachange", h);
+  }, []);
+  const zh = lang === "zh";
+  const L = (o) => (o && o[lang] != null ? o[lang] : o);
+  const all = window.STORE.log_list().filter((e) => SP_ENTITIES.includes(e.entity));
+  const recent = all.slice(0, 30);
+  const freshCutoff = Date.now() - 86400000;
+
+  return (
+    <div className="side-panel">
+      <div className="sp-head">
+        <span className="sp-title"><Icon name="bell" size={15} />{zh ? "供應商通知" : "Supplier notifications"}</span>
+        <span className="sp-count mono">{all.length}</span>
+      </div>
+      <p className="sp-sub">{zh ? "測試項目、制具、設備的變更——已反映在供應商盤點頁面的提醒中。" : "Changes to tests, fixtures & equipment — these drive the recount alerts suppliers see."}</p>
+      {recent.length === 0 ? (
+        <div className="sp-empty"><Icon name="bell" size={22} /><p>{zh ? "尚無通知" : "No notifications yet"}</p></div>
+      ) : (
+        <ul className="notif-list sp-list">
+          {recent.map((e) => (
+            <li key={e.id} className={"notif-item" + (e.at > freshCutoff ? " is-new" : "")}>
+              <span className="notif-dot" aria-hidden="true" />
+              <div className="notif-body">
+                <div className="notif-line1">
+                  <span className="notif-vendor">{entityLabel(e.entity)} · {actionLabel(e.action)}</span>
+                  <span className="notif-time">{notifAgo(e.at, lang)}</span>
+                </div>
+                <div className="notif-line2"><span className="notif-part">{L(e.targetName) || "—"}</span></div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Right panel: supplier login records (time + best-effort public IP) ---------- */
+function LoginRecordsPanel({ lang }) {
+  const [, bump] = hState(0);
+  hEffect(() => {
+    const h = () => bump((n) => n + 1);
+    window.addEventListener("bff:loginlogchange", h);
+    window.addEventListener("bff:authchange", h);
+    const tick = setInterval(h, 60000);
+    return () => { window.removeEventListener("bff:loginlogchange", h); window.removeEventListener("bff:authchange", h); clearInterval(tick); };
+  }, []);
+  const zh = lang === "zh";
+  const L = (o) => (o && o[lang] != null ? o[lang] : o);
+  const all = window.AUTH.allLoginLogs();
+  const recent = all.slice(0, 40);
+
+  return (
+    <div className="side-panel">
+      <div className="sp-head">
+        <span className="sp-title"><Icon name="clipboard" size={15} />{zh ? "供應商登入紀錄" : "Supplier logins"}</span>
+        <span className="sp-count mono">{all.length}</span>
+      </div>
+      <p className="sp-sub">{zh ? "IP 為登入時偵測到的公用網路位址（客戶端自報，僅供參考）。" : "IP is the public network address observed at login (client-reported, best-effort)."}</p>
+      {recent.length === 0 ? (
+        <div className="sp-empty"><Icon name="clipboard" size={22} /><p>{zh ? "尚無供應商登入紀錄" : "No supplier logins yet"}</p></div>
+      ) : (
+        <div className="sp-loglist">
+          <div className="sp-logrow sp-logrow-head">
+            <span>{zh ? "供應商" : "Vendor"}</span><span>{zh ? "時間" : "Time"}</span><span>IP</span>
+          </div>
+          {recent.map((e, i) => (
+            <div className="sp-logrow" key={e.vendorId + "|" + e.at + "|" + i}>
+              <span className="sp-logvendor">{L(e.vendor)}</span>
+              <span className="sp-logtime mono">{dayKey(e.at)} {timeOf(e.at)}</span>
+              <span className={"sp-logip mono" + (e.ip ? "" : " sp-logip-na")}>{e.ip || "—"}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -429,8 +429,8 @@ function App() {
   uEffect(() => {
     const onMsg = (e) => {
       const ty = e && e.data && e.data.type;
-      if (ty === "__activate_edit_mode") setTwOpen(true);
-      else if (ty === "__deactivate_edit_mode" || ty === "__edit_mode_dismissed") setTwOpen(false);
+      if (ty === "__activate_edit_mode") setTwOpen(true);else
+      if (ty === "__deactivate_edit_mode" || ty === "__edit_mode_dismissed") setTwOpen(false);
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
@@ -483,6 +483,7 @@ function App() {
   const goStock = () => {location.hash = "#/stock";};
   const goEquipStock = () => {location.hash = "#/equip-stock";};
   const goEquipAdmin = () => {location.hash = "#/equip-admin";};
+  const goNotices = () => {location.hash = "#/notices";};
   const goAdmin = () => {location.hash = "#/admin";};
   const goManage = () => {location.hash = "#/manage";};
   const goHistory = () => {location.hash = "#/history";};
@@ -543,6 +544,11 @@ function App() {
               <Icon name="bolt" size={15} />{lang === "zh" ? "設備盤點" : "Equipment"}
             </button>
           }
+          {!admin &&
+          <button className={"topnav-btn" + (route.name === "notices" ? " on" : "")} onClick={goNotices}>
+              <Icon name="bell" size={15} />{lang === "zh" ? "變更通知" : "Change notices"}
+            </button>
+          }
         </nav>
         <div className="topbar-right">
           {admin && <NotificationCenter lang={lang} onOpenStock={goAdmin} />}
@@ -562,7 +568,7 @@ function App() {
             <button className={lang === "en" ? "on" : ""} onClick={() => setLang("en")}>EN</button>
           </div>
           <button className="icobtn tw-toggle" onClick={toggleTweaks}
-            aria-label={lang === "zh" ? "設計調整" : "Design tweaks"} title={lang === "zh" ? "設計調整" : "Design tweaks"}>
+          aria-label={lang === "zh" ? "設計調整" : "Design tweaks"} title={lang === "zh" ? "設計調整" : "Design tweaks"}>
             <Icon name="settings" size={16} />
           </button>
         </div>
@@ -583,6 +589,8 @@ function App() {
         admin ? <EquipmentAdminDashboard lang={lang} t={t} /> : <EquipmentStockEntry lang={lang} t={t} /> :
         route.name === "equipAdmin" ?
         admin ? <EquipmentAdminDashboard lang={lang} t={t} /> : <EquipmentStockEntry lang={lang} t={t} /> :
+        route.name === "notices" ?
+        <VendorNoticesPage lang={lang} t={t} goStock={goStock} goEquip={goEquipStock} /> :
         route.name === "manage" ?
         admin ? <AdminManage lang={lang} t={t} onEdit={editItem} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} /> :
         route.name === "edit" ?
@@ -650,6 +658,7 @@ function parseRoute() {
   if (h.startsWith("#/manage")) return { name: "manage" };
   if (h.startsWith("#/edit/")) return { name: "edit", id: h.replace("#/edit/", "") };
   if (h.startsWith("#/history")) return { name: "history" };
+  if (h.startsWith("#/notices")) return { name: "notices" };
   if (h.startsWith("#/results")) return { name: "results" };
   return { name: "list" };
 }

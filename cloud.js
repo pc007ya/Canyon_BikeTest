@@ -113,7 +113,7 @@ function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve
 })();
 
 /* ---- sync engine ---- */
-let _unsubData = null, _unsubStock = null, _unsubReport = null, _writeTimer = null;
+let _unsubData = null, _unsubStock = null, _unsubReport = null, _unsubLoginLog = null, _writeTimer = null;
 /* Guard against a real race: our own debounced write (800ms) can be beaten by
    a late/out-of-order remote snapshot carrying OLDER data, which would
    silently revert an edit the admin just made (e.g. a version/name change)
@@ -187,20 +187,37 @@ function startSync() {
     }, (e) => setStatus("error", e.message));
   }
 
+  // 3c) subscribe to vendor login-log docs (admin only — vendors don't need to read this back).
+  if (me && me.role === "admin") {
+    _unsubLoginLog = fsMod.onSnapshot(fsMod.collection(db, "bff_loginlog"), (qs) => {
+      qs.docChanges().forEach((ch) => {
+        if (ch.doc.metadata.hasPendingWrites) return;
+        const d = ch.doc.data() || {};
+        try { localStorage.setItem("bff:loginlog:" + ch.doc.id, JSON.stringify(d.entries || [])); } catch (e) {}
+      });
+      window.dispatchEvent(new CustomEvent("bff:loginlogchange"));
+    }, (e) => setStatus("error", e.message));
+  }
+
   // 4) push local data changes (debounced)
   window.addEventListener("bff:datachange", onLocalData);
   // 5) push local stock changes for the active vendor
   window.addEventListener("bff:stockchange", onLocalStock);
   // 6) push local report changes for the active vendor
   window.addEventListener("bff:reportchange", onLocalReport);
+  // 7) push local login-log changes for the active vendor (fires on login + once IP resolves)
+  window.addEventListener("bff:loginlogchange", onLocalLoginLog);
+  if (me && me.role !== "admin") onLocalLoginLog(); // push any login recorded before this connection was ready
 }
 function stopSync() {
   if (_unsubData) { _unsubData(); _unsubData = null; }
   if (_unsubStock) { _unsubStock(); _unsubStock = null; }
   if (_unsubReport) { _unsubReport(); _unsubReport = null; }
+  if (_unsubLoginLog) { _unsubLoginLog(); _unsubLoginLog = null; }
   window.removeEventListener("bff:datachange", onLocalData);
   window.removeEventListener("bff:stockchange", onLocalStock);
   window.removeEventListener("bff:reportchange", onLocalReport);
+  window.removeEventListener("bff:loginlogchange", onLocalLoginLog);
 }
 function onLocalData() {
   if (window.STORE.isApplyingRemote()) return;
@@ -243,4 +260,12 @@ function onLocalReport() {
   let map = {};
   try { map = JSON.parse(localStorage.getItem("bff:report:" + u.id) || "{}"); } catch (e) {}
   fsMod.setDoc(fsMod.doc(db, "bff_report", u.id), map).catch((e) => setStatus("error", e.message));
+}
+function onLocalLoginLog() {
+  const u = window.AUTH && window.AUTH.get && window.AUTH.get();
+  if (!u || u.role === "admin") return; // only vendors push their own login log
+  const { db, fsMod } = _api;
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem("bff:loginlog:" + u.id) || "[]"); } catch (e) {}
+  fsMod.setDoc(fsMod.doc(db, "bff_loginlog", u.id), { entries: list }).catch((e) => setStatus("error", e.message));
 }

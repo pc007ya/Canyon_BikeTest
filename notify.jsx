@@ -240,3 +240,127 @@ function VendorAlertBell({ lang, onGoStock, onGoEquip }) {
 
 window.NotificationCenter = NotificationCenter;
 window.VendorAlertBell = VendorAlertBell;
+
+/* ---------- Supplier-facing "Change notices" page ----------
+   Full page (not just a bell dropdown): every test / fixture / equipment
+   change QC makes, with a timestamp, grouped by day. Prototype per request —
+   reachable from its own topnav tab; content is the same list vendors' pink
+   bell already flags, just persistent and browsable instead of transient. */
+function vnDayKey(ts) { const d = new Date(ts); const p = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())}`; }
+function vnTimeOf(ts) { const d = new Date(ts); const p = (n) => String(n).padStart(2, "0"); return `${p(d.getHours())}:${p(d.getMinutes())}`; }
+function vnDayLabel(key, lang) {
+  const today = vnDayKey(Date.now());
+  const yest = vnDayKey(Date.now() - 86400000);
+  if (key === today) return lang === "zh" ? "今天 " + key : "Today · " + key;
+  if (key === yest) return lang === "zh" ? "昨天 " + key : "Yesterday · " + key;
+  return key;
+}
+const VN_ENTITIES = ["test", "fixture", "equipment"];
+
+/* per-vendor "acknowledged" set — an entry stays pink until the supplier
+   clicks it at least once. Pruned to the current log's ids on every save so
+   it can't grow past the log itself. */
+function vnLoadAcked(vendorId) {
+  try { return new Set(JSON.parse(localStorage.getItem("bff:noticeack:" + vendorId) || "[]")); } catch (e) { return new Set(); }
+}
+function vnSaveAcked(vendorId, set, validIds) {
+  const pruned = [...set].filter((id) => validIds.has(id));
+  try { localStorage.setItem("bff:noticeack:" + vendorId, JSON.stringify(pruned)); } catch (e) {}
+}
+
+function VendorNoticesPage({ lang, t, goStock, goEquip }) {
+  const [, bump] = notifState(0);
+  notifEffect(() => { window.scrollTo(0, 0); }, []);
+  notifEffect(() => {
+    const h = () => bump((n) => n + 1);
+    window.addEventListener("bff:datachange", h);
+    return () => window.removeEventListener("bff:datachange", h);
+  }, []);
+  const zh = lang === "zh";
+  const L = (o) => (o && o[lang] != null ? o[lang] : o);
+  const all = (window.STORE.log_list() || []).filter((e) => VN_ENTITIES.includes(e.entity));
+
+  const me = window.AUTH.get && window.AUTH.get();
+  const vendorId = (me && me.id) || "anon";
+  const ackedRef = notifRef(null);
+  if (!ackedRef.current) ackedRef.current = vnLoadAcked(vendorId);
+  function ack(id) {
+    if (ackedRef.current.has(id)) return;
+    ackedRef.current.add(id);
+    vnSaveAcked(vendorId, ackedRef.current, new Set(all.map((e) => e.id)));
+    bump((n) => n + 1);
+  }
+
+  const actionLabel = (a) => ({
+    create: zh ? "新增" : "Created",
+    update: zh ? "更新" : "Updated",
+    delete: zh ? "刪除" : "Deleted",
+  }[a] || a);
+  const entityLabel = (e) => ({
+    test: zh ? "測試項目" : "Test",
+    fixture: zh ? "制具" : "Fixture",
+    equipment: zh ? "設備" : "Equipment",
+  }[e] || e);
+
+  const groups = [];
+  let cur = null;
+  all.forEach((e) => {
+    const k = vnDayKey(e.at);
+    if (!cur || cur.key !== k) { cur = { key: k, entries: [] }; groups.push(cur); }
+    cur.entries.push(e);
+  });
+
+  return (
+    <div className="home">
+      <section className="hero hero-sm">
+        <div className="hero-grid" aria-hidden="true" />
+        <div className="hero-inner">
+          <div className="hero-kicker"><span className="kick-dot" />{zh ? "供應商 · 變更通知" : "Supplier · change notices"}</div>
+          <h1 className="hero-title">{zh ? "變更通知" : "Change notices"}</h1>
+          <p className="hero-hint">{zh ? "品管部異動測試項目、制具或設備時，會列在這裡（依日期、時間排序）。" : "Every time QC changes a test, fixture or equipment, it's listed here — grouped by day and time."}</p>
+        </div>
+      </section>
+
+      <section className="list-section">
+        {all.length === 0 ? (
+          <div className="empty">
+            <Icon name="bell" size={30} />
+            <p className="empty-title">{zh ? "目前沒有變更通知" : "No change notices yet"}</p>
+            <p className="empty-hint">{zh ? "品管部異動測試項目、制具或設備後，會出現在這裡。" : "Notices appear here once QC changes a test, fixture or equipment."}</p>
+          </div>
+        ) : (
+          <div className="timeline">
+            {groups.map((g) => (
+              <div className="tl-day" key={g.key}>
+                <div className="tl-date"><span className="tl-dot-lg" />{vnDayLabel(g.key, lang)}<span className="tl-count mono">{g.entries.length}</span></div>
+                <div className="tl-entries">
+                  {g.entries.map((e) => (
+                    <div className={"tl-entry tl-" + e.action + (!ackedRef.current.has(e.id) ? " tl-unread" : "")} key={e.id} onClick={() => ack(e.id)}>
+                      <span className="tl-time mono">{vnTimeOf(e.at)}</span>
+                      <span className={"tl-badge tl-b-" + e.action}>{actionLabel(e.action)}</span>
+                      <div className="tl-main">
+                        <div className="tl-target">
+                          <span className="tl-ent">{entityLabel(e.entity)}</span>
+                          <span className="tl-name">{L(e.targetName) || "—"}</span>
+                        </div>
+                        <ul className="tl-changes">
+                          {(e.changes || []).map((c, i) => <li key={i}>{L(c)}</li>)}
+                        </ul>
+                        {e.entity !== "test" && (
+                          <button className="notif-goto" onClick={() => (e.entity === "equipment" ? goEquip() : goStock())}>
+                            {zh ? "前往盤點" : "Go count"}<Icon name="chevronRight" size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+window.VendorNoticesPage = VendorNoticesPage;
