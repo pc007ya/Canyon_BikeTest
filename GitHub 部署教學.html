@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub 部署教學 — 測試制具查詢系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#eef1f4; --paper:#ffffff; --ink:#152232; --ink-2:#43566b; --ink-3:#7d8fa0;
+    --line:#d2dae2; --line-soft:#e6ebf0; --accent:#1f5fbf; --accent-soft:#e3edfb;
+    --ok:#1f8a5b; --ok-soft:#e2f3ea; --warn:#b06a12; --warn-soft:#fbeedd; --danger:#c0392b;
+    --gh-dark:#0d1117; --gh-green:#238636;
+    --font:'IBM Plex Sans','Noto Sans TC',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+    line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:880px;margin:0 auto;padding:48px 28px 80px;}
+
+  .cover{background:linear-gradient(135deg,#0d1117,#161b22);color:#eef3f9;border-radius:14px;
+    padding:40px 44px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(88,166,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(88,166,255,.10) 1px,transparent 1px);
+    background-size:26px 26px;mask:linear-gradient(135deg,#000,transparent 70%);}
+  .cover .kicker{position:relative;font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:#79c0ff;margin:0 0 14px;}
+  .cover h1{position:relative;margin:0 0 10px;font-size:33px;font-weight:700;letter-spacing:-.01em;}
+  .cover p{position:relative;margin:0;color:#b9c6d6;font-size:15px;max-width:62ch;}
+  .cover .badges{position:relative;display:flex;gap:8px;flex-wrap:wrap;margin-top:22px;}
+  .cover .badge{font-family:var(--mono);font-size:12px;background:rgba(121,192,255,.14);
+    border:1px solid rgba(121,192,255,.32);color:#cfe0f6;padding:5px 11px;border-radius:999px;}
+
+  .lead{display:flex;gap:14px;background:var(--accent-soft);border:1px solid #c5dbf6;
+    border-radius:var(--radius);padding:16px 18px;margin:26px 0 8px;font-size:14.5px;color:#274a78;}
+  .lead .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+    display:grid;place-items:center;font-weight:700;font-size:14px;}
+
+  .step{margin-top:40px;}
+  .step-head{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
+  .step-num{flex:none;width:40px;height:40px;border-radius:11px;background:var(--ink);color:#fff;
+    display:grid;place-items:center;font-weight:700;font-size:19px;font-family:var(--mono);}
+  .step-head h2{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em;}
+  .step-head .tag{margin-left:auto;font-size:12px;font-family:var(--mono);color:var(--ink-3);
+    border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--paper);}
+  .step-body{padding-left:54px;}
+  .step-body p{margin:.5em 0;font-size:14.5px;color:var(--ink-2);}
+  .step-body b{color:var(--ink);font-weight:600;}
+  .step-body ol,.step-body ul{margin:.4em 0;padding-left:1.3em;font-size:14.5px;color:var(--ink-2);}
+  .step-body li{margin:.3em 0;}
+  .step-body li::marker{color:var(--accent);font-weight:600;}
+
+  .mock{margin:16px 0;border-radius:10px;overflow:hidden;border:1px solid var(--line);
+    box-shadow:0 6px 22px rgba(21,34,50,.10);}
+  .mock-cap{font-size:12.5px;color:var(--ink-3);margin:6px 0 16px;font-style:italic;}
+
+  .term{background:var(--gh-dark);}
+  .term-bar{background:#161b22;display:flex;align-items:center;gap:8px;padding:8px 12px;color:#c7d6e8;
+    font-size:12.5px;border-bottom:1px solid #21262d;}
+  .term-bar .tb-ico{width:14px;height:14px;border-radius:3px;background:#58a6ff;}
+  .term-bar .tb-dots{margin-left:auto;display:flex;gap:16px;color:#7e97b3;font-family:var(--mono);}
+  .term-body{padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.8;color:#e6edf3;
+    white-space:pre-wrap;word-break:break-word;}
+  .term-body .ps{color:#7ee2a8;}
+  .term-body .cmd{color:#ffffff;font-weight:600;}
+  .term-body .dim{color:#8b949e;}
+  .term-body .ok{color:#7ee2a8;}
+  .term-body .url{color:#79c0ff;text-decoration:underline;}
+
+  .gh{background:#fff;}
+  .gh-top{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line-soft);
+    background:#f6f8fa;}
+  .gh-mark{width:20px;height:20px;border-radius:50%;background:#24292f;}
+  .gh-top .gh-title{font-size:14px;font-weight:600;color:#1f2328;}
+  .gh-top .gh-repo{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-family:var(--mono);
+    background:#eef1f4;border-radius:999px;padding:4px 12px;}
+  .gh-body{padding:20px 22px;}
+  .gh-body h4{margin:0 0 4px;font-size:15px;color:#1f2328;}
+  .gh-body .sub{font-size:12.5px;color:var(--ink-3);margin:0 0 16px;}
+
+  .ui-btn{display:inline-flex;align-items:center;gap:8px;background:var(--gh-green);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 16px;border-radius:6px;border:none;}
+  .ui-btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .ui-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line-soft);
+    border-radius:8px;margin:8px 0;background:#fff;font-size:13.5px;color:#1f2328;}
+  .ui-row .rt{font-weight:600;}
+  .ui-row .toggle{margin-left:auto;width:38px;height:21px;border-radius:999px;background:var(--ok);
+    position:relative;}
+  .ui-row .toggle::after{content:"";position:absolute;top:2px;right:2px;width:17px;height:17px;
+    border-radius:50%;background:#fff;}
+  .ui-pill{font-size:11.5px;font-family:var(--mono);padding:3px 9px;border-radius:999px;
+    background:var(--ok-soft);color:var(--ok);font-weight:600;}
+  .ui-field{display:flex;flex-direction:column;gap:5px;margin:10px 0;}
+  .ui-field .lb{font-size:12px;color:var(--ink-3);font-weight:600;}
+  .ui-field .box{border:1px solid var(--line);border-radius:6px;padding:9px 12px;font-family:var(--mono);
+    font-size:13px;color:var(--ink);background:#fff;}
+
+  .type{display:flex;align-items:flex-start;gap:10px;background:var(--gh-dark);border-radius:8px;
+    padding:12px 14px;margin:12px 0;font-family:var(--mono);font-size:13px;color:#e6edf3;}
+  .type .lab{flex:none;background:#58a6ff;color:#0d1117;font-size:11px;border-radius:4px;padding:2px 8px;
+    margin-top:1px;font-weight:700;}
+  .type code{color:#fff;font-weight:600;}
+
+  .note{border-radius:8px;padding:13px 16px;margin:14px 0;font-size:13.5px;display:flex;gap:11px;}
+  .note .ni{flex:none;font-weight:700;font-family:var(--mono);}
+  .note.tip{background:var(--ok-soft);color:#1c6244;}
+  .note.warn{background:var(--warn-soft);color:#8a5410;}
+  .note.info{background:var(--accent-soft);color:#274a78;}
+
+  .trouble{margin-top:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;}
+  .trouble .tr{display:grid;grid-template-columns:1fr 1.3fr;gap:0;border-top:1px solid var(--line-soft);}
+  .trouble .tr:first-child{border-top:none;}
+  .trouble .th{background:#f6f8fa;font-weight:600;font-size:13px;color:var(--ink);}
+  .trouble .c{padding:11px 15px;font-size:13.5px;color:var(--ink-2);}
+  .trouble .c.q{color:var(--ink);font-weight:500;border-right:1px solid var(--line-soft);}
+  .trouble .c b{color:var(--accent);}
+
+  .filelist{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;margin:10px 0;
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-2);}
+  .filelist .fi{display:flex;align-items:center;gap:7px;}
+  .filelist .fi::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none;}
+
+  .divider{height:1px;background:var(--line);margin:44px 0 0;border:none;}
+  .footer{margin-top:28px;font-size:12.5px;color:var(--ink-3);text-align:center;font-family:var(--mono);}
+
+  @media print{
+    body{background:#fff;}
+    .wrap{max-width:none;padding:0 12mm;}
+    .step{break-inside:avoid;}
+    .mock,.trouble,.note,.type{break-inside:avoid;}
+    .cover{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <p class="kicker">GitHub Pages · 零成本靜態部署</p>
+    <h1>GitHub 部署教學</h1>
+    <p>把測試制具查詢系統放到 GitHub，用 GitHub Pages 免費架設網址。全程約 10 分鐘，不需要任何伺服器或建置流程。</p>
+    <div class="badges">
+      <span class="badge">純靜態網站</span>
+      <span class="badge">免費 · 無需信用卡</span>
+      <span class="badge">Firebase 雲端同步照常運作</span>
+    </div>
+  </div>
+
+  <div class="lead"><span class="dot">i</span>
+    <div>這個系統是純前端（HTML + JS，瀏覽器內即時轉譯），<b>沒有建置步驟</b>，GitHub Pages 可以直接原封不動架起來。雲端同步（Firebase）是純前端呼叫，跟主機在哪裡無關，搬過去後行為完全一樣。</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-head"><span class="step-num">1</span><h2>建立 GitHub Repository</h2><span class="tag">github.com</span></div>
+    <div class="step-body">
+      <p>登入 <b>github.com</b> → 右上角 <b>+</b> → <b>New repository</b>。</p>
+      <div class="mock gh">
+        <div class="gh-top"><span class="gh-mark"></span><span class="gh-title">Create a new repository</span></div>
+        <div class="gh-body">
+          <div class="ui-field"><span class="lb">Repository name</span><span class="box">test-fixture-finder</span></div>
+          <div class="ui-field"><span class="lb">Visibility</span><span class="box">● Public　○ Private</span></div>
+          <button class="ui-btn">Create repository</button>
+        </div>
+      </div>
+      <p class="mock-cap">名稱隨意；選 <b>Public</b>（Private 也可以用 Pages，但需付費方案）。不要勾選「Add a README」，保持空倉庫即可。</p>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-head"><span class="step-num">2</span><h2>上傳專案檔案</h2><span class="tag">兩種方式擇一</span></div>
+    <div class="step-body">
+      <p><b>方式 A · 網頁拖曳上傳（不需裝 Git，最簡單）</b></p>
+      <ol>
+        <li>進入剛建立的空倉庫頁面，點 <b>uploading an existing file</b>。</li>
+        <li>把下載的部署資料夾「<b>整個資料夾內容</b>」（不含最外層資料夾本身）拖進瀏覽器視窗——<code>index.html</code> 必須直接在倉庫根目錄，不能藏在子資料夾裡。</li>
+        <li>下方填寫 commit 訊息（例如「Initial deploy」），按 <b>Commit changes</b>。</li>
+      </ol>
+      <div class="note info"><span class="ni">!</span>GitHub 網頁上傳一次最多約 100 個檔案／單檔 25MB。這個專案檔案數在範圍內，若之後 uploads/ 圖片變多超過限制，改用方式 B。</div>
+
+      <p style="margin-top:22px;"><b>方式 B · Git 指令（適合之後要常常更新）</b></p>
+      <div class="mock term">
+        <div class="term-bar"><span class="tb-ico"></span>Terminal<span class="tb-dots">···</span></div>
+        <div class="term-body"><span class="ps">$</span> <span class="cmd">cd</span> /path/to/專案資料夾
+<span class="ps">$</span> <span class="cmd">git init</span>
+<span class="ps">$</span> <span class="cmd">git add .</span>
+<span class="ps">$</span> <span class="cmd">git commit -m</span> "Initial deploy"
+<span class="ps">$</span> <span class="cmd">git branch -M main</span>
+<span class="ps">$</span> <span class="cmd">git remote add origin</span> <span class="url">https://github.com/你的帳號/test-fixture-finder.git</span>
+<span class="ps">$</span> <span class="cmd">git push -u origin main</span></div>
+      </div>
+      <p class="mock-cap">「你的帳號」與倉庫名稱請換成你自己的；GitHub 會在建倉庫頁面直接給你這串指令，複製貼上即可。</p>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-head"><span class="step-num">3</span><h2>啟用 GitHub Pages</h2><span class="tag">Settings → Pages</span></div>
+    <div class="step-body">
+      <p>倉庫頁面上方 <b>Settings</b> → 左側選單 <b>Pages</b>。</p>
+      <div class="mock gh">
+        <div class="gh-top"><span class="gh-mark"></span><span class="gh-title">Pages</span><span class="gh-repo">test-fixture-finder</span></div>
+        <div class="gh-body">
+          <h4>Build and deployment</h4>
+          <p class="sub">Source</p>
+          <div class="ui-field"><span class="box">Deploy from a branch</span></div>
+          <p class="sub" style="margin-top:14px;">Branch</p>
+          <div class="ui-row"><span class="rt">main</span><span style="margin-left:8px;color:var(--ink-3);">/ (root)</span>
+            <button class="ui-btn" style="margin-left:auto;">Save</button></div>
+        </div>
+      </div>
+      <p>按 <b>Save</b> 後等 1–2 分鐘，同一頁最上方會出現網址，格式為：</p>
+      <div class="type"><span class="lab">URL</span><code>https://你的帳號.github.io/test-fixture-finder/</code></div>
+      <div class="note tip"><span class="ni">✓</span>看到「Your site is live at …」就代表部署成功，點開即可直接使用完整系統（登入頁、制具/設備查詢、盤點、雲端同步全部正常）。</div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-head"><span class="step-num">4</span><h2>之後要更新內容怎麼辦？</h2><span class="tag">後續維護</span></div>
+    <div class="step-body">
+      <p><b>方式 A（網頁上傳的人）</b>：回到倉庫，進入要改的檔案 → 點鉛筆圖示編輯，或用「Add file → Upload files」覆蓋整批，commit 後 Pages 會在 1 分鐘內自動重新部署，不用重新設定。</p>
+      <p><b>方式 B（Git 指令的人）</b>：改完檔案後執行：</p>
+      <div class="mock term">
+        <div class="term-bar"><span class="tb-ico"></span>Terminal<span class="tb-dots">···</span></div>
+        <div class="term-body"><span class="ps">$</span> <span class="cmd">git add .</span>
+<span class="ps">$</span> <span class="cmd">git commit -m</span> "Update"
+<span class="ps">$</span> <span class="cmd">git push</span></div>
+      </div>
+      <p>GitHub Pages 每次 push 到 <code>main</code> 都會自動重新發佈，通常 30 秒內生效。</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="step">
+    <div class="step-head"><span class="step-num" style="background:var(--ok);">✓</span><h2>需要放哪些檔案？</h2><span class="tag">部署資料夾內容</span></div>
+    <div class="step-body">
+      <p>把下載的部署資料夾「內容」整個放進倉庫根目錄（<code>index.html</code> 要在最上層）：</p>
+      <div class="filelist">
+        <span class="fi">index.html</span><span class="fi">styles.css</span>
+        <span class="fi">app.jsx</span><span class="fi">admin.jsx</span>
+        <span class="fi">admin-manage.jsx</span><span class="fi">components.jsx</span>
+        <span class="fi">fixtures.jsx</span><span class="fi">equipment.jsx</span>
+        <span class="fi">equipment.js</span><span class="fi">notify.jsx</span>
+        <span class="fi">reports.jsx</span><span class="fi">history.jsx</span>
+        <span class="fi">tweaks-panel.jsx</span><span class="fi">deck-stage.js</span>
+        <span class="fi">store.js</span><span class="fi">cloud.js</span>
+        <span class="fi">auth.js</span><span class="fi">theme.js</span>
+        <span class="fi">idb.js</span><span class="fi">zip.js</span>
+        <span class="fi">data.js</span><span class="fi">jigs.js</span>
+        <span class="fi">tests.js</span><span class="fi">jigs/ (資料夾)</span>
+        <span class="fi">uploads/ (資料夾)</span><span class="fi">供應商流程指引.html</span>
+      </div>
+      <div class="note warn"><span class="ni">!</span><code>_redirects</code> 這個檔案是 Netlify 專用設定，GitHub Pages 不認得它，留著也沒關係（會被忽略），不留也不影響任何功能——這系統用的是 <code>#/...</code> 網址片段做路由，本來就不需要伺服器轉址規則。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">★</span><h2>雲端同步（Firebase）需要改設定嗎？</h2><span class="tag">不需要</span></div>
+    <div class="step-body">
+      <p><code>index.html</code> 裡已經寫死你的 Firebase 專案設定，純前端呼叫，跟部署在哪個網域無關，<b>搬到 GitHub Pages 後雲端同步照常運作</b>，不用重新設定 Firebase。</p>
+      <div class="note info"><span class="ni">i</span>唯一要注意：Firebase Authentication 的「已授權網域」清單，預設只允許 <code>localhost</code> 與你原本設定的網域。若管理員要在新網址上用「Google 登入」同步，需到 Firebase 主控台 → Authentication → Settings → Authorized domains，新增 <code>你的帳號.github.io</code>。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">★</span><h2>Tweaks 設計面板還能用嗎？</h2><span class="tag">已修正，可正常使用</span></div>
+    <div class="step-body">
+      <p>右上角語言切換旁新增了一顆 <b>齒輪圖示</b>，點下去即可開關「設計調整」面板（切換主題、密度、示意圖顯示），<b>不依賴任何外部平台</b>，GitHub Pages / Netlify / 本機開啟都能正常使用。</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">?</span><h2>常見問題</h2></div>
+    <div class="step-body">
+      <div class="trouble">
+        <div class="tr"><div class="th c q">開啟網址是 404</div><div class="th c">確認 <code>index.html</code> 是在倉庫「根目錄」，不是在子資料夾裡；Settings → Pages 的 Branch 是否已選對分支並按 Save。</div></div>
+        <div class="tr"><div class="th c q">畫面空白、主控台有紅字</div><div class="th c">多半是某個 .jsx/.js 檔沒上傳完整。對照上方「需要放哪些檔案」清單逐一核對。</div></div>
+        <div class="tr"><div class="th c q">圖片顯示不出來</div><div class="th c"><code>jigs/</code> 與 <code>uploads/</code> 兩個資料夾要整包上傳，注意檔名大小寫需與程式碼內參照完全一致（GitHub Pages 對大小寫敏感，Windows 本機測試可能不會，上線後才發現）。</div></div>
+        <div class="tr"><div class="th c q">Google 登入同步失敗</div><div class="th c">依上方「Firebase 需要改設定嗎」段落，把新網域加入 Firebase Authentication 的已授權網域清單。</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">測試制具查詢系統 · GitHub Pages 部署指南</p>
+</div>
+</body>
+</html>
