@@ -393,9 +393,9 @@ function Login({ lang, setLang, t, onLogin }) {
           <Icon name="logout" size={16} />{lang === "zh" ? "登入系統" : "Sign in"}
         </button>
         {!isAdmin &&
-        <a className="btn ghost guide-link" href="供應商流程指引 — 水平疲勞測試.html" target="_blank" rel="noopener"
+        <a className="btn ghost guide-link" href="供應商流程指引 - 水平疲勞測試.html" target="_blank" rel="noopener"
         style={{ width: "100%", marginTop: 12, justifyContent: "center", textDecoration: "none" }}>
-            <Icon name="file" size={16} />{lang === "zh" ? "供應商流程指引（水平疲勞測試教學）" : "Supplier process guide (tutorial)"}
+            <Icon name="file" size={16} />{lang === "zh" ? "供應商指引教學" : "Supplier process guide (tutorial)"}
           </a>
         }
       </form>
