@@ -58,6 +58,24 @@
     });
   };
 
+  /* ---- SHA-256 hex digest (Web Crypto; falls back to a non-cryptographic
+     checksum only if crypto.subtle is unavailable, e.g. a plain http:// or
+     file:// context). Used so the admin access code is never stored or
+     synced to Firestore as plaintext — only its hash travels. ---- */
+  window.bffSha256 = async function (str) {
+    const s = String(str == null ? "" : str);
+    try {
+      if (window.crypto && window.crypto.subtle) {
+        const buf = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+        return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+    } catch (e) {}
+    // fallback: FNV-1a (not cryptographic, but keeps the app functional offline)
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return ("fnv1a" + (h >>> 0).toString(16).padStart(8, "0"));
+  };
+
 (function () {
   const KEYS = { items: "bff:items:v2", vendors: "bff:vendors:v1", parts: "bff:parts:v2", equipment: "bff:equipment:v1", log: "bff:auditlog:v1" };
   const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -120,6 +138,22 @@
   }
   normalizeVersion(parts);
   normalizeVersion(equipment);
+
+  /* ---- admin access code: hash-only storage (security hardening) ----
+     Older sessions/synced docs may still hold the PLAINTEXT admin password
+     under "bff:admincode" (from before this fix). Firestore's rules let any
+     signed-in user — including the anonymous session every visitor gets —
+     read the shared master doc, so a plaintext password there is effectively
+     public. This migrates any such value to its SHA-256 hash, once,
+     silently, without needing the admin to re-enter anything. */
+  const DEFAULT_ADMIN_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // sha256("admin")
+  function looksLikeHash(s) { return typeof s === "string" && /^(fnv1a[0-9a-f]{8}|[0-9a-f]{64})$/i.test(s); }
+  (async function migrateAdminCodeToHash() {
+    try {
+      const v = localStorage.getItem("bff:admincode");
+      if (v && !looksLikeHash(v)) { localStorage.setItem("bff:admincode", await window.bffSha256(v)); }
+    } catch (e) {}
+  })();
 
   const emit = () => window.dispatchEvent(new CustomEvent("bff:datachange"));
   const actor = () => { const u = window.AUTH.get && window.AUTH.get(); return u && u.name ? u.name : { zh: "系統", en: "System" }; };
@@ -446,7 +480,10 @@
     if (snap.parts) { Object.keys(parts).forEach((k) => delete parts[k]); Object.assign(parts, snap.parts); save(KEYS.parts, parts); }
     if (snap.equipment) { Object.keys(equipment).forEach((k) => delete equipment[k]); Object.assign(equipment, snap.equipment); save(KEYS.equipment, equipment); }
     if (snap.log) { log.length = 0; snap.log.forEach((e) => log.push(e)); save(KEYS.log, log); }
-    if (snap.adminCode) { try { localStorage.setItem("bff:admincode", snap.adminCode); } catch (e) {} }
+    if (snap.adminCode) {
+      if (looksLikeHash(snap.adminCode)) { try { localStorage.setItem("bff:admincode", snap.adminCode); } catch (e) {} }
+      else { window.bffSha256(snap.adminCode).then((h) => { try { localStorage.setItem("bff:admincode", h); } catch (e) {} }); }
+    }
     if (migrateEquip()) save(KEYS.items, items);
     emit();
     setTimeout(() => { applyingRemote = false; }, 0);
@@ -454,11 +491,12 @@
   const isApplyingRemote = () => applyingRemote;
   const snapshotData = () => ({ items: clone(items), vendors: clone(vendors), parts: clone(parts), equipment: clone(equipment), log: clone(log), adminCode: admincode_get() });
 
-  function admincode_get() { try { return localStorage.getItem("bff:admincode") || "admin"; } catch (e) { return "admin"; } }
-  function admincode_set(code) {
+  function admincode_get() { try { return localStorage.getItem("bff:admincode") || DEFAULT_ADMIN_HASH; } catch (e) { return DEFAULT_ADMIN_HASH; } }
+  async function admincode_set(code) {
     const c = String(code == null ? "" : code).trim();
     if (!c) return;
-    try { localStorage.setItem("bff:admincode", c); } catch (e) {}
+    const hash = await window.bffSha256(c);
+    try { localStorage.setItem("bff:admincode", hash); } catch (e) {}
     addLog({ action: "update", entity: "system", targetId: "admincode", targetName: { zh: "管理員存取碼", en: "Admin access code" }, changes: [{ zh: "已變更管理員存取碼", en: "Admin access code changed" }] });
     emit();
   }

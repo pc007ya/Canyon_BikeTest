@@ -10,13 +10,11 @@
     { id: "tektro", name: { zh: "彥豪金屬 Tektro", en: "Tektro Technology" }, code: "1234" },
   ];
   const ADMIN = { id: "admin", role: "admin", name: { zh: "品管部 管理員", en: "QC Administrator" } };
-  // Admin access code is overridable (stored in localStorage, synced via cloud).
-  try {
-    Object.defineProperty(ADMIN, "code", {
-      enumerable: true,
-      get() { try { return localStorage.getItem("bff:admincode") || "admin"; } catch (e) { return "admin"; } },
-    });
-  } catch (e) { ADMIN.code = "admin"; }
+  // Admin access code is verified against a SHA-256 hash (see store.js
+  // admincode_get/admincode_set + window.bffSha256) — never stored or synced
+  // as plaintext, since Firestore's rules let any signed-in visitor (incl.
+  // anonymous) read the shared master doc. ADMIN has no `.code` property;
+  // Login hashes the entered value and compares to window.STORE.admincode_get().
   const KEY = "bff:vendor";
   function get() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } }
   function set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {} window.dispatchEvent(new CustomEvent("bff:authchange")); }

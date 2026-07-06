@@ -294,21 +294,27 @@ function Login({ lang, setLang, t, onLogin }) {
     return () => window.removeEventListener("bff:datachange", h);
   }, []);
 
-  function submit(e) {
+  async function submit(e) {
     if (e) e.preventDefault();
-    let target = isAdmin ? window.AUTH.ADMIN : sel;
-    if (!isAdmin && !sel) {setErr(lang === "zh" ? "請先選擇貴公司" : "Please select your company");return;}
-    if (!isAdmin) {
-      // validate against the freshest record — access codes may have just
-      // synced from the cloud after an admin changed them.
-      const live = (window.AUTH.VENDORS || []).find((v) => v.id === sel.id);
-      if (live) target = live;
+    if (isAdmin) {
+      if (!code.trim()) {setErr(lang === "zh" ? "請輸入存取碼" : "Enter the access code");return;}
+      const enteredHash = await window.bffSha256(code.trim());
+      if (enteredHash !== window.STORE.admincode_get()) {
+        setErr(lang === "zh" ? "管理員密碼錯誤" : "Wrong admin password");
+        return;
+      }
+      onLogin(window.AUTH.ADMIN);
+      return;
     }
+    let target = sel;
+    if (!sel) {setErr(lang === "zh" ? "請先選擇貴公司" : "Please select your company");return;}
+    // validate against the freshest record — access codes may have just
+    // synced from the cloud after an admin changed them.
+    const live = (window.AUTH.VENDORS || []).find((v) => v.id === sel.id);
+    if (live) target = live;
     if (!code.trim()) {setErr(lang === "zh" ? "請輸入存取碼" : "Enter the access code");return;}
     if (code.trim() !== target.code) {
-      setErr(isAdmin ?
-      lang === "zh" ? "管理員密碼錯誤" : "Wrong admin password" :
-      lang === "zh" ? "存取碼錯誤" : "Wrong access code");
+      setErr(lang === "zh" ? "存取碼錯誤" : "Wrong access code");
       return;
     }
     onLogin(target);

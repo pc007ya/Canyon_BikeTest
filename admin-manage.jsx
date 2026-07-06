@@ -272,10 +272,10 @@ function AdminCodeCard({ lang }) {
   const [val, setVal] = mState("");
   const [msg, setMsg] = mState("");
   function start() {setVal("");setMsg("");setEditing(true);}
-  function save() {
+  async function save() {
     const c = val.trim();
     if (!c) {setMsg(lang === "zh" ? "請輸入新存取碼" : "Enter a new code");return;}
-    window.STORE.admincode_set(c);
+    await window.STORE.admincode_set(c);
     setCode(window.STORE.admincode_get());
     setEditing(false);
     setMsg("");
@@ -290,7 +290,7 @@ function AdminCodeCard({ lang }) {
         </div>
         {!editing &&
         <React.Fragment>
-            <span className="admincode-val mono">{"•".repeat(Math.max(4, code.length))}</span>
+            <span className="admincode-val mono">{"••••••••"}</span>
             <button className="btn sm" onClick={start}><Icon name="pencil" size={14} />{lang === "zh" ? "變更" : "Change"}</button>
           </React.Fragment>
         }
