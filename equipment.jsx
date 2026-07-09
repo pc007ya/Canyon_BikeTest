@@ -9,9 +9,11 @@ const { useState: eqState, useEffect: eqEffect, useMemo: eqMemo, useRef: eqRef }
 /* part key -> { equip, uses, required(MAX), stock, shortage, state, overridden } */
 function buildEquipUsage() {
   const EQ = window.DATA.EQUIPMENT || {};
+  const allowed = window.bffAllowedItemIds ? window.bffAllowedItemIds() : null; // vendor with assignments → only their tests' equipment
   const map = new Map();
   Object.entries(EQ).forEach(([key, equip]) => map.set(key, { key, equip, uses: [], required: 0 }));
   window.DATA.ITEMS.forEach((item) => {
+    if (allowed && !allowed[item.id]) return;
     (item.equipment || []).forEach((f) => {
       const rec = map.get(f.key);
       if (!rec) return;
@@ -19,7 +21,7 @@ function buildEquipUsage() {
       if (f.qty > rec.required) rec.required = f.qty;   // ← MAX, not sum
     });
   });
-  const out = [...map.values()];
+  const out = [...map.values()].filter((r) => !allowed || r.uses.length > 0);
   out.forEach((r) => {
     const e = window.bffGetEntry(r.key);
     r.defaultStock = r.equip.stock != null ? r.equip.stock : 0;

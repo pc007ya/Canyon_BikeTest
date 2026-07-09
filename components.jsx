@@ -149,66 +149,71 @@ function FixtureTable({ fixtures, lang, t, onZoom }) {
   );
 }
 
-/* ---------- Image slot with upload (persisted to localStorage) ---------- */
-function StepImage({ storeKey, fallback, t, onZoom, alt }) {
-  const [src, setSrc] = useState(fallback);
+/* ---------- Step image: official (read-only) + optional per-vendor comparison photo ----------
+   The shared/official image (item.steps[i].image) is never edited from here —
+   only the admin's TestEditor can change it. A logged-in vendor may attach
+   their OWN comparison photo alongside it, purely for their own reference;
+   other vendors never see it, and it never overwrites the official image. */
+function StepImage({ itemId, stepIndex, official, vendor, isAdmin, t, onZoom, alt }) {
+  const vendorId = vendor && !isAdmin ? vendor.id : null;
+  const [mine, setMine] = useState(() => window.STORE.stepphoto_get(vendorId, itemId, stepIndex));
   const [drag, setDrag] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   const fileRef = useRef(null);
-  const custom = src !== fallback;
 
-  // load any previously-saved photo (IndexedDB preferred, localStorage legacy)
   useEffect(() => {
-    let on = true;
-    (async () => {
-      let v;
-      if (window.KV && window.KV.available) v = await window.KV.get(storeKey);
-      if (v == null) { try { v = localStorage.getItem(storeKey); } catch (e) {} }
-      if (on && v) setSrc(v);
-    })();
-    return () => { on = false; };
-  }, [storeKey]);
+    setMine(window.STORE.stepphoto_get(vendorId, itemId, stepIndex));
+    const h = () => setMine(window.STORE.stepphoto_get(vendorId, itemId, stepIndex));
+    window.addEventListener("bff:stepphotochange", h);
+    return () => window.removeEventListener("bff:stepphotochange", h);
+  }, [vendorId, itemId, stepIndex]);
 
-  function persist(dataUrl) {
-    if (window.KV && window.KV.available) {
-      window.KV.set(storeKey, dataUrl).catch(() => trySaveLocal(dataUrl));
-      try { localStorage.removeItem(storeKey); } catch (e) {}
-    } else { trySaveLocal(dataUrl); }
-  }
-  function trySaveLocal(dataUrl) {
-    try { localStorage.setItem(storeKey, dataUrl); }
-    catch (e) { try { window.dispatchEvent(new CustomEvent("bff:saveerror", { detail: { key: storeKey } })); } catch (e2) {} }
-  }
   function load(file) {
-    if (!file || !file.type.startsWith("image/")) return;
-    const r = new FileReader();
-    r.onload = () => { setSrc(r.result); persist(r.result); };
-    r.readAsDataURL(file);
+    if (!file || !vendorId) return;
+    setBusy(true); setErr("");
+    window.bffResizeImage(file, 1280, 0.72)
+      .then((src) => { window.STORE.stepphoto_set(vendorId, itemId, stepIndex, src); setMine(src); setBusy(false); })
+      .catch(() => { setBusy(false); setErr(t("uploadFailed")); });
   }
-  function reset(e) {
+  function remove(e) {
     e.stopPropagation();
-    setSrc(fallback);
-    if (window.KV && window.KV.available) window.KV.del(storeKey);
-    try { localStorage.removeItem(storeKey); } catch (e2) {}
+    window.STORE.stepphoto_remove(vendorId, itemId, stepIndex);
+    setMine(null);
   }
 
+  const showCompare = !!vendorId; // only a logged-in vendor gets the second slot
   return (
-    <div
-      className={"stepimg" + (drag ? " is-drag" : "")}
-      onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-      onDragLeave={() => setDrag(false)}
-      onDrop={(e) => { e.preventDefault(); setDrag(false); load(e.dataTransfer.files[0]); }}
-    >
-      <img src={src} alt={alt || ""} onClick={() => onZoom(src, alt)} />
-      <div className="stepimg-tools">
-        {custom && <span className="badge-custom"><Icon name="check" size={12} />{t("yourPhoto")}</span>}
-        <button className="mini-btn" onClick={() => fileRef.current.click()}>
-          <Icon name="upload" size={13} />{custom ? t("replace") : t("uploadPhoto")}
-        </button>
-        {custom && <button className="mini-btn ghost" onClick={reset}>{t("revert")}</button>}
+    <div className={"stepimg-row" + (showCompare ? " has-compare" : "")}>
+      <div className="stepimg stepimg-official">
+        <img src={official} alt={alt || ""} onClick={() => onZoom(official, alt)} />
+        {showCompare && <span className="stepimg-label">{t("officialPhoto")}</span>}
       </div>
-      <input ref={fileRef} type="file" accept="image/*" hidden
-        onChange={(e) => load(e.target.files[0])} />
-      {drag && <div className="drop-veil"><Icon name="upload" size={22} />{t("dropHere")}</div>}
+      {showCompare &&
+      <div
+        className={"stepimg stepimg-yours" + (drag ? " is-drag" : "") + (mine ? "" : " is-empty")}
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); load(e.dataTransfer.files[0]); }}
+      >
+        {mine
+          ? <img src={mine} alt={alt || ""} onClick={() => onZoom(mine, alt)} />
+          : <div className="stepimg-placeholder" onClick={() => fileRef.current.click()}>
+              <Icon name="upload" size={20} />
+              <span>{t("addYourPhoto")}</span>
+            </div>}
+        <span className="stepimg-label stepimg-label-yours">{t("yourPhoto")}</span>
+        <div className="stepimg-tools">
+          <button className="mini-btn" disabled={busy} onClick={() => fileRef.current.click()}>
+            <Icon name="upload" size={13} />{mine ? t("replace") : t("uploadPhoto")}
+          </button>
+          {mine && <button className="mini-btn ghost" onClick={remove}>{t("revert")}</button>}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" hidden
+          onChange={(e) => { load(e.target.files[0]); e.target.value = ""; }} />
+        {drag && <div className="drop-veil"><Icon name="upload" size={22} />{t("dropHere")}</div>}
+        {err && <div className="stepimg-err">{err}</div>}
+      </div>}
     </div>
   );
 }

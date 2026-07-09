@@ -29,8 +29,11 @@ const STR = {
   step: { zh: "步驟", en: "Step" },
   uploadPhoto: { zh: "上傳實拍", en: "Upload photo" },
   replace: { zh: "更換", en: "Replace" },
-  revert: { zh: "還原", en: "Revert" },
-  yourPhoto: { zh: "已上傳實拍", en: "Your photo" },
+  revert: { zh: "移除", en: "Remove" },
+  yourPhoto: { zh: "您的實拍對比", en: "Your comparison photo" },
+  officialPhoto: { zh: "官方示意", en: "Official reference" },
+  addYourPhoto: { zh: "新增實拍對比（僅自己可見）", en: "Add your photo (visible only to you)" },
+  uploadFailed: { zh: "上傳失敗（檔案不是圖片，或超過 20MB）", en: "Upload failed (not an image, or over 20MB)" },
   dropHere: { zh: "放開以上傳", en: "Drop to upload" },
   print: { zh: "列印 / 匯出", en: "Print / export" },
   standard: { zh: "對應標準", en: "Standard" },
@@ -100,10 +103,14 @@ function applyTheme(name) {
 }
 
 /* ================= HOME ================= */
-function Home({ lang, t, theme, onOpen }) {
+function Home({ lang, t, theme, onOpen, vendor, admin }) {
   const [q, setQ] = uState("");
   const [cat, setCat] = uState("all");
-  const items = window.DATA.ITEMS;
+  // vendors only see tests covered by their assigned product codes;
+  // a vendor with NO assignment sees nothing (empty), NOT everything.
+  const allowed = (!admin && vendor) ? (window.STORE.testcodes_itemIdsForVendor(vendor.id) || {}) : null;
+  const unassigned = (!admin && vendor) && window.STORE.testcodes_forVendor(vendor.id).length === 0;
+  const items = allowed ? window.DATA.ITEMS.filter((it) => allowed[it.id]) : window.DATA.ITEMS;
   const L = (o) => o && o[lang] != null ? o[lang] : o;
 
   const cats = useMemo(() => {
@@ -114,7 +121,7 @@ function Home({ lang, t, theme, onOpen }) {
       m.get(k).count++;
     });
     return [{ key: "all", label: t("all"), count: items.length }, ...m.values()];
-  }, [lang]);
+  }, [lang, items]);
 
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -128,7 +135,7 @@ function Home({ lang, t, theme, onOpen }) {
       join(" ").toLowerCase();
       return hay.includes(needle);
     });
-  }, [q, cat, lang]);
+  }, [q, cat, lang, items]);
 
   return (
     <div className="home">
@@ -148,6 +155,7 @@ function Home({ lang, t, theme, onOpen }) {
             {q && <button className="search-clear" onClick={() => setQ("")} aria-label={t("clear")}><Icon name="x" size={16} /></button>}
           </div>
           <p className="hero-hint">{t("searchHint")}</p>
+          {!admin && vendor && <VendorCodeBanner vendorId={vendor.id} lang={lang} />}
         </div>
       </section>
 
@@ -159,7 +167,13 @@ function Home({ lang, t, theme, onOpen }) {
           </span>
         </div>
 
-        {results.length === 0 ?
+        {unassigned ?
+        <div className="empty">
+            <Icon name="grid" size={30} />
+            <p className="empty-title">{lang === "zh" ? "尚未被指派專案" : "No project assigned yet"}</p>
+            <p className="empty-hint">{lang === "zh" ? "您目前沒有被指派任何產品代號，因此無需任何制具與設備。請聯絡管理員分派專案。" : "You have no assigned product codes, so there are no fixtures or equipment to prepare. Please contact the administrator."}</p>
+          </div> :
+        results.length === 0 ?
         <div className="empty">
             <Icon name="search" size={30} />
             <p className="empty-title">{t("noResults")}</p>
@@ -174,6 +188,37 @@ function Home({ lang, t, theme, onOpen }) {
       </section>
     </div>);
 
+}
+
+/* ---------- Admin-only: read-only strip of vendor comparison-photo submissions ---------- */
+function AdminStepSubmissions({ itemId, stepIndex, lang, t, onZoom }) {
+  const L = (o) => (o && o[lang] != null ? o[lang] : o);
+  const [, force] = uState(0);
+  uEffect(() => {
+    const h = () => force((n) => n + 1);
+    window.addEventListener("bff:stepphotochange", h);
+    return () => window.removeEventListener("bff:stepphotochange", h);
+  }, []);
+  const subs = window.STORE.stepphoto_allSubmissions(itemId, stepIndex);
+  if (!subs.length) return null;
+  const vendorsById = {};
+  (window.AUTH.VENDORS || []).forEach((v) => { vendorsById[v.id] = v; });
+  return (
+    <div className="stepsubs">
+      <div className="stepsubs-h">{lang === "zh" ? "供應商實拍對比" : "Vendor comparison photos"}<span className="mono">{subs.length}</span></div>
+      <div className="stepsubs-strip">
+        {subs.map((s) => {
+          const v = vendorsById[s.vendorId];
+          return (
+            <button className="stepsubs-item" key={s.vendorId} onClick={() => onZoom(s.dataUri, v ? L(v.name) : s.vendorId)}>
+              <img src={s.dataUri} alt="" />
+              <span>{v ? L(v.name) : s.vendorId}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 /* ================= DETAIL ================= */
@@ -244,8 +289,9 @@ function Detail({ item, lang, t, onBack, onZoom, vendor, admin }) {
                 <p className="step-desc">{L(s.desc)}</p>
               </div>
               <StepImage
-              storeKey={"bff:" + item.id + ":step" + i}
-              fallback={s.image} t={t} alt={L(s.title)} onZoom={onZoom} />
+              itemId={item.id} stepIndex={i} official={s.image}
+              vendor={vendor} isAdmin={admin} t={t} alt={L(s.title)} onZoom={onZoom} />
+              {admin && <AdminStepSubmissions itemId={item.id} stepIndex={i} lang={lang} t={t} onZoom={onZoom} />}
             
             </li>
           )}
@@ -483,6 +529,8 @@ function App() {
   const goStock = () => {location.hash = "#/stock";};
   const goEquipStock = () => {location.hash = "#/equip-stock";};
   const goEquipAdmin = () => {location.hash = "#/equip-admin";};
+  const goTestcodes = () => {location.hash = "#/testcodes";};
+  const goProjects = () => {location.hash = "#/projects";};
   const goNotices = () => {location.hash = "#/notices";};
   const goAdmin = () => {location.hash = "#/admin";};
   const goManage = () => {location.hash = "#/manage";};
@@ -513,6 +561,16 @@ function App() {
           <button className={"topnav-btn" + (route.name === "list" || route.name === "detail" ? " on" : "")} onClick={goTests}>
             <Icon name="grid" size={15} />{lang === "zh" ? "測試項目" : "Tests"}
           </button>
+          {!admin && window.STORE.testcodes_forVendor(vendor.id).length > 0 &&
+          <button className={"topnav-btn" + (route.name === "projects" ? " on" : "")} onClick={goProjects}>
+              <Icon name="grid" size={15} />{lang === "zh" ? "目前專案" : "Current projects"}
+            </button>
+          }
+          {admin &&
+          <button className={"topnav-btn" + (route.name === "testcodes" ? " on" : "")} onClick={goTestcodes}>
+            <Icon name="grid" size={15} />{lang === "zh" ? "產品代號" : "Product codes"}
+          </button>
+          }
           <button className={"topnav-btn" + (onFixturesArea ? " on" : "")} onClick={goFixtures}>
             <Icon name="cube" size={15} />{lang === "zh" ? "制具總覽" : "Fixtures"}
           </button>
@@ -582,7 +640,7 @@ function App() {
         route.name === "fixtures" ?
         <FixturesOverview lang={lang} t={t} onOpenFixture={openFixture} onOpenTest={open} /> :
         route.name === "admin" ?
-        admin ? <AdminDashboard lang={lang} t={t} onOpenFixture={openFixture} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} /> :
+        admin ? <AdminDashboard lang={lang} t={t} onOpenFixture={openFixture} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} /> :
         route.name === "stock" ?
         admin ? <AdminDashboard lang={lang} t={t} onOpenFixture={openFixture} /> : <StockEntry lang={lang} t={t} goFixtures={goFixtures} /> :
         route.name === "equipStock" ?
@@ -592,14 +650,18 @@ function App() {
         route.name === "notices" ?
         <VendorNoticesPage lang={lang} t={t} goStock={goStock} goEquip={goEquipStock} /> :
         route.name === "manage" ?
-        admin ? <AdminManage lang={lang} t={t} onEdit={editItem} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} /> :
+        admin ? <AdminManage lang={lang} t={t} onEdit={editItem} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} /> :
         route.name === "edit" ?
-        admin ? <TestEditor id={route.id} lang={lang} t={t} onDone={goManage} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} /> :
+        admin ? <TestEditor id={route.id} lang={lang} t={t} onDone={goManage} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} /> :
         route.name === "history" ?
-        admin ? <HistoryPage lang={lang} t={t} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} /> :
+        admin ? <HistoryPage lang={lang} t={t} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} /> :
+        route.name === "testcodes" ?
+        admin ? <TestcodesPage lang={lang} t={t} onOpenTest={open} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} /> :
+        route.name === "projects" ?
+        !admin ? <VendorProjectsPage lang={lang} vendorId={vendor.id} onOpenTest={open} /> : <TestcodesPage lang={lang} t={t} onOpenTest={open} /> :
         route.name === "results" ?
-        admin ? <ResultsMatrix lang={lang} t={t} onOpenTest={open} onZoom={(src, cap) => setZoom({ src, cap })} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} /> :
-        <Home lang={lang} t={t} theme={tw.direction} onOpen={open} />}
+        admin ? <ResultsMatrix lang={lang} t={t} onOpenTest={open} onZoom={(src, cap) => setZoom({ src, cap })} /> : <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} /> :
+        <Home lang={lang} t={t} theme={tw.direction} onOpen={open} vendor={vendor} admin={admin} />}
       </main>
 
       <footer className="footer no-print">
@@ -653,6 +715,8 @@ function parseRoute() {
   if (h.startsWith("#/fixtures")) return { name: "fixtures" };
   if (h.startsWith("#/equip-stock")) return { name: "equipStock" };
   if (h.startsWith("#/equip-admin")) return { name: "equipAdmin" };
+  if (h.startsWith("#/testcodes")) return { name: "testcodes" };
+  if (h.startsWith("#/projects")) return { name: "projects" };
   if (h.startsWith("#/stock")) return { name: "stock" };
   if (h.startsWith("#/admin")) return { name: "admin" };
   if (h.startsWith("#/manage")) return { name: "manage" };

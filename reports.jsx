@@ -40,29 +40,6 @@ function collectReports(lang) {
   return out;
 }
 
-/* ---- image downscale -> JPEG data-URI ---- */
-function resizeImage(file, maxPx, quality) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onerror = reject;
-    fr.onload = () => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let { width: w, height: h } = img;
-        const scale = Math.min(1, maxPx / Math.max(w, h));
-        w = Math.round(w * scale); h = Math.round(h * scale);
-        const cv = document.createElement("canvas");
-        cv.width = w; cv.height = h;
-        cv.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(cv.toDataURL("image/jpeg", quality || 0.7));
-      };
-      img.src = fr.result;
-    };
-    fr.readAsDataURL(file);
-  });
-}
-
 const REPORT_MAX_PHOTOS = 6;
 
 function fmtReportStamp(ts, lang) {
@@ -84,6 +61,7 @@ function ReportPanel({ item, lang, t, vendor, admin, onZoom }) {
   const [photos, setPhotos] = rpState(existing.photos || []);
   const [busy, setBusy] = rpState(false);
   const [saved, setSaved] = rpState(false);
+  const [uploadErr, setUploadErr] = rpState("");
   const fileRef = rpRef(null);
 
   rpEffect(() => { // re-hydrate when switching test
@@ -98,12 +76,20 @@ function ReportPanel({ item, lang, t, vendor, admin, onZoom }) {
     const files = Array.from(list || []).filter((f) => /^image\//.test(f.type));
     if (!files.length) return;
     setBusy(true);
+    setUploadErr("");
     const room = REPORT_MAX_PHOTOS - photos.length;
     const next = photos.slice();
+    let failed = 0;
     for (const f of files.slice(0, room)) {
-      try { next.push(await resizeImage(f, 1280, 0.7)); } catch (e) {}
+      try { next.push(await window.bffResizeImage(f, 1280, 0.7)); }
+      catch (e) { failed++; }
     }
     setPhotos(next); setBusy(false); dirty();
+    if (failed) {
+      setUploadErr(lang === "zh"
+        ? `${failed} 張照片上傳失敗（檔案不是圖片，或超過 20MB）`
+        : `${failed} photo(s) failed to upload (not an image, or over 20MB)`);
+    }
   }
   function removePhoto(i) { setPhotos(photos.filter((_, j) => j !== i)); dirty(); }
 
@@ -171,6 +157,7 @@ function ReportPanel({ item, lang, t, vendor, admin, onZoom }) {
           <input ref={fileRef} type="file" accept="image/*" multiple hidden
             onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
         </div>
+        {uploadErr && <div className="login-err" style={{ marginTop: 8 }}><Icon name="x" size={13} />{uploadErr}</div>}
       </div>
 
       <div className="report-actions">
@@ -258,7 +245,13 @@ function ResultsMatrix({ lang, t, onOpenTest, onZoom }) {
   // ---- filters ----
   const [fStatus, setFStatus] = rpState("all");   // all | ready | draft
   const [fVendor, setFVendor] = rpState("all");   // all | <vendorId>
-  const shownVendors = fVendor === "all" ? vendors : vendors.filter((v) => v.id === fVendor);
+  // ---- test-code gate: when codes exist, pick one (or 全部) before the matrix shows ----
+  const codes = (window.STORE.testcodes_list && window.STORE.testcodes_list()) || [];
+  const [fCode, setFCode] = rpState("");          // "" = not chosen yet | "all" | <codeId>
+  const codeRec = fCode && fCode !== "all" ? codes.find((c) => c.id === fCode) : null;
+  const gateOpen = codes.length === 0 || !!fCode;
+  const codeVendors = codeRec && (codeRec.vendorIds || []).length ? vendors.filter((v) => codeRec.vendorIds.indexOf(v.id) >= 0) : vendors;
+  const shownVendors = (fVendor === "all" ? codeVendors : codeVendors.filter((v) => v.id === fVendor));
 
   // index reports: vendorId -> { testId -> report }
   const byVendor = {};
@@ -276,9 +269,10 @@ function ResultsMatrix({ lang, t, onOpenTest, onZoom }) {
 
   const reportedCount = (tId) => shownVendors.reduce((n, v) => n + (cellFor(v.id, tId).state !== "none" ? 1 : 0), 0);
 
-  // apply status filter to the row list
+  // apply status + test-code filters to the row list
   const rows = tests.filter((it) => {
     if (fStatus !== "all" && (it.status || "draft") !== fStatus) return false;
+    if (codeRec && (codeRec.itemIds || []).indexOf(it.id) < 0) return false;
     return true;
   });
 
@@ -325,6 +319,14 @@ function ResultsMatrix({ lang, t, onOpenTest, onZoom }) {
       </header>
 
       <div className="results-filters">
+        {codes.length > 0 &&
+        <label className="rf-group"><span className="rf-lab">{lang === "zh" ? "產品代號" : "Product code"}</span>
+          <select className="inp rf-sel" value={fCode} onChange={(e) => setFCode(e.target.value)}>
+            <option value="" disabled>{lang === "zh" ? "請先選擇…" : "Select…"}</option>
+            <option value="all">{t("resultsAll")}</option>
+            {codes.map((c) => <option key={c.id} value={c.id}>{c.code}{c.name ? " · " + c.name : ""}{c.standard && typeof c.standard === "string" ? " · " + c.standard : ""}</option>)}
+          </select>
+        </label>}
         <label className="rf-group"><span className="rf-lab">{t("resultsFilterStatus")}</span>
           <select className="inp rf-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
             <option value="all">{t("resultsAll")}</option>
@@ -342,7 +344,9 @@ function ResultsMatrix({ lang, t, onOpenTest, onZoom }) {
         <button className="btn sm rf-export" onClick={exportCSV}><Icon name="download" size={15} />{t("resultsExport")}</button>
       </div>
 
-      {vendors.length === 0 ? (
+      {!gateOpen ? (
+        <div className="passcrit empty"><Icon name="grid" size={20} />{lang === "zh" ? "請先於上方選定產品代號，再呈現對應的測試結果。" : "Select a product code above to display its results."}</div>
+      ) : vendors.length === 0 ? (
         <div className="passcrit empty"><Icon name="clipboard" size={20} />{t("resultsNoVendors")}</div>
       ) : (
         <div className="matrix-wrap">

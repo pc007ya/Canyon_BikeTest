@@ -3,30 +3,63 @@
    and records every admin change for the History page.
    Must load AFTER data.js + auth.js, BEFORE the babel component scripts. */
   /* ---- shared image downscale -> JPEG data-URI ----
-     Admin uploads (制具圖 / 設備圖 / 步驟圖 / 示意圖) are stored as data-URIs and
-     synced INSIDE the single Firestore master doc, which is hard-capped at 1 MiB.
-     Full-resolution phone photos blow that limit, so every upload is downscaled
-     and JPEG-compressed first (mirrors the vendor report-photo path). */
-  window.bffResizeImage = function (file, maxPx, quality) {
+     Admin uploads (制具圖 / 設備圖 / 步驟圖 / 示意圖) and vendor report photos are
+     stored as data-URIs and synced INSIDE Firestore documents (master doc
+     capped at 1 MiB overall; per-vendor report docs should stay small too).
+     Every upload is:
+       1) rejected up front if the SOURCE file is absurdly large (>20MB) —
+          avoids freezing the tab trying to decode a huge phone/DSLR photo.
+       2) rejected if it doesn't decode as an image (blocks non-image files
+          masquerading with an image extension; SVGs are rasterized by the
+          canvas draw below, which strips any embedded script/markup).
+       3) downscaled + JPEG-compressed, then RE-COMPRESSED in a loop (lower
+          quality, smaller max dimension) until the result is under
+          BFF_UPLOAD_CAP_BYTES (2MB) or a retry budget is exhausted. */
+  const BFF_MAX_SOURCE_BYTES = 20 * 1024 * 1024; // 20MB — refuse before even reading
+  const BFF_UPLOAD_CAP_BYTES = 2 * 1024 * 1024;  // 2MB — auto re-compress toward this
+
+  /* estimate the byte size of a data-URI's payload (base64 decodes to ~3/4 its length) */
+  window.bffDataUriBytes = function (uri) {
+    if (typeof uri !== "string") return 0;
+    const i = uri.indexOf(",");
+    const b64 = i < 0 ? uri : uri.slice(i + 1);
+    return Math.floor(b64.length * 0.75);
+  };
+
+  function bffRenderToJpeg(img, maxPx, quality, fallback) {
+    let w = img.width, h = img.height;
+    const scale = Math.min(1, maxPx / Math.max(w, h));
+    w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext("2d");
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h); // flatten transparency for JPEG
+    ctx.drawImage(img, 0, 0, w, h);
+    try { return cv.toDataURL("image/jpeg", quality); } catch (e) { return fallback; } // tainted/unsupported -> fall back
+  }
+
+  window.bffResizeImage = function (file, maxPx, quality, capBytes) {
     return new Promise((resolve, reject) => {
-      if (!file || !file.type || !file.type.startsWith("image/")) { reject(new Error("not an image")); return; }
+      if (!file || !file.type || !file.type.startsWith("image/")) { reject(new Error("not-an-image")); return; }
+      if (file.size > BFF_MAX_SOURCE_BYTES) { reject(new Error("file-too-large")); return; }
       const fr = new FileReader();
-      fr.onerror = reject;
+      fr.onerror = () => reject(new Error("read-failed"));
       fr.onload = () => {
         const img = new Image();
-        img.onerror = reject;
+        img.onerror = () => reject(new Error("decode-failed"));
         img.onload = () => {
-          let w = img.width, h = img.height;
-          const scale = Math.min(1, (maxPx || 1200) / Math.max(w, h));
-          w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
-          const cv = document.createElement("canvas");
-          cv.width = w; cv.height = h;
-          const ctx = cv.getContext("2d");
-          ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h); // flatten transparency for JPEG
-          ctx.drawImage(img, 0, 0, w, h);
-          let out;
-          try { out = cv.toDataURL("image/jpeg", quality || 0.72); }
-          catch (e) { out = fr.result; } // tainted/unsupported -> fall back to original
+          const cap = capBytes || BFF_UPLOAD_CAP_BYTES;
+          let px = maxPx || 1200, q = quality || 0.72;
+          let out = bffRenderToJpeg(img, px, q, fr.result);
+          let tries = 0;
+          while (window.bffDataUriBytes(out) > cap && tries < 5) {
+            q = Math.max(0.35, q - 0.12);
+            px = Math.max(480, Math.round(px * 0.85));
+            const next = bffRenderToJpeg(img, px, q, out);
+            if (!next) break;
+            out = next;
+            tries++;
+          }
           resolve(out);
         };
         img.src = fr.result;
@@ -36,22 +69,24 @@
   };
 
   /* Re-compress an existing data-URI image (used by the maintenance/compact tool). */
-  window.bffCompressDataUri = function (uri, maxPx, quality) {
+  window.bffCompressDataUri = function (uri, maxPx, quality, capBytes) {
     return new Promise((resolve) => {
       if (typeof uri !== "string" || uri.slice(0, 11) !== "data:image/") { resolve(uri); return; }
       const img = new Image();
       img.onerror = () => resolve(uri);
       img.onload = () => {
-        let w = img.width, h = img.height;
-        const scale = Math.min(1, (maxPx || 1200) / Math.max(w, h));
-        w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
-        const cv = document.createElement("canvas");
-        cv.width = w; cv.height = h;
-        const ctx = cv.getContext("2d");
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        let out;
-        try { out = cv.toDataURL("image/jpeg", quality || 0.72); } catch (e) { out = uri; }
+        const cap = capBytes || BFF_UPLOAD_CAP_BYTES;
+        let px = maxPx || 1200, q = quality || 0.72;
+        let out = bffRenderToJpeg(img, px, q, uri);
+        let tries = 0;
+        while (window.bffDataUriBytes(out) > cap && tries < 5) {
+          q = Math.max(0.35, q - 0.12);
+          px = Math.max(480, Math.round(px * 0.85));
+          const next = bffRenderToJpeg(img, px, q, out);
+          if (!next) break;
+          out = next;
+          tries++;
+        }
         resolve(out.length < uri.length ? out : uri); // keep whichever is smaller
       };
       img.src = uri;
@@ -77,7 +112,7 @@
   };
 
 (function () {
-  const KEYS = { items: "bff:items:v2", vendors: "bff:vendors:v1", parts: "bff:parts:v2", equipment: "bff:equipment:v1", log: "bff:auditlog:v1" };
+  const KEYS = { items: "bff:items:v2", vendors: "bff:vendors:v1", parts: "bff:parts:v2", equipment: "bff:equipment:v1", testcodes: "bff:testcodes:v1", bikecats: "bff:bikecats:v1", log: "bff:auditlog:v1" };
   const clone = (x) => JSON.parse(JSON.stringify(x));
   const useIDB = !!(window.KV && window.KV.available);
   const load = (k, f) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? f : v; } catch (e) { return f; } };
@@ -95,7 +130,7 @@
     catch (e) { try { window.dispatchEvent(new CustomEvent("bff:saveerror", { detail: { key: k, error: String(e && e.name || e) } })); } catch (e2) {} }
   }
 
-  const defaults = { items: clone(window.DATA.ITEMS), vendors: clone(window.AUTH.VENDORS), parts: clone(window.DATA.PARTS), equipment: clone(window.DATA.EQUIPMENT || {}) };
+  const defaults = { items: clone(window.DATA.ITEMS), vendors: clone(window.AUTH.VENDORS), parts: clone(window.DATA.PARTS), equipment: clone(window.DATA.EQUIPMENT || {}), testcodes: [], bikecats: ["MTB", "CITY", "ROAD", "E-CITY", "E-MTB", "Others"] };
 
   // live state (mutated in place so existing window.DATA.* / window.AUTH.* readers stay valid)
   const items = load(KEYS.items, null) || clone(window.DATA.ITEMS);
@@ -103,6 +138,9 @@
   const parts = load(KEYS.parts, null) || clone(window.DATA.PARTS);
   const _loadedEquip = load(KEYS.equipment, null);
   const equipment = (_loadedEquip && Object.keys(_loadedEquip).length) ? _loadedEquip : clone(window.DATA.EQUIPMENT || {});
+  const testcodes = load(KEYS.testcodes, []);
+  const _loadedCats = load(KEYS.bikecats, null);
+  const bikecats = (_loadedCats && _loadedCats.length) ? _loadedCats : clone(defaults.bikecats);
   const log = load(KEYS.log, []);
   window.DATA.ITEMS = items;
   window.DATA.PARTS = parts;
@@ -138,6 +176,34 @@
   }
   normalizeVersion(parts);
   normalizeVersion(equipment);
+
+  // normalize legacy testcode records (standard was {zh,en}; now a plain
+  // bike-category string; `name` added later). Called again after the async
+  // IDB boot and after cloud hydrate, both of which replace the list wholesale.
+  // drop malformed item records (defensive: a bad save could insert a
+  // non-object or an item missing its bilingual fields, which crashes Home)
+  function sanitizeItems() {
+    let touched = false;
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      if (!it || typeof it !== "object" || !it.id || !it.name || !it.category) { items.splice(i, 1); touched = true; }
+    }
+    if (touched) save(KEYS.items, items);
+    return touched;
+  }
+  sanitizeItems();
+
+  function normalizeTestcodes() {
+    let touched = false;
+    testcodes.forEach((c) => {
+      if (c.standard && typeof c.standard === "object") { c.standard = c.standard.zh || c.standard.en || ""; touched = true; }
+      if (c.name == null) { c.name = ""; touched = true; }
+      if (!Array.isArray(c.params)) { c.params = []; touched = true; }
+    });
+    if (touched) save(KEYS.testcodes, testcodes);
+    return touched;
+  }
+  normalizeTestcodes();
 
   /* ---- admin access code: hash-only storage (security hardening) ----
      Older sessions/synced docs may still hold the PLAINTEXT admin password
@@ -357,6 +423,102 @@
   }
   const newPartKey = () => "p_" + Date.now().toString(36);
 
+  /* ---- test codes (測試代號) — admin assigns a code (with its governing
+     standard) to a set of test items and a set of vendors. A vendor with at
+     least one assignment only sees the items covered by their codes; a vendor
+     with NO assignment sees everything (backward compatible). ---- */
+  const testcodes_list = () => testcodes;
+  const testcodes_get = (id) => testcodes.find((c) => c.id === id);
+  function testcodes_save(id, data) {
+    const i = testcodes.findIndex((c) => c.id === id);
+    let code = String(data.code || "").trim();
+    const standard = typeof data.standard === "string" ? data.standard : (data.standard && (data.standard.zh || data.standard.en)) || "";
+    if (!code && standard) code = nextTestcodeCode(standard); // code field hidden in editor — auto-number
+    const rec = { id, code, name: String(data.name || "").trim(), standard,
+      params: (data.params || []).filter((p) => p && (String(p.label || "").trim() || String(p.value || "").trim())),
+      photoBike: data.photoBike || "", photoSpec: data.photoSpec || "",
+      itemIds: (data.itemIds || []).slice(), vendorIds: (data.vendorIds || []).slice(), updatedAt: Date.now() };
+    if (i >= 0) {
+      const before = testcodes[i];
+      testcodes[i] = rec;
+      const ch = [];
+      if (before.code !== rec.code) ch.push({ zh: `代號 ${before.code} → ${rec.code}`, en: `Code ${before.code} → ${rec.code}` });
+      if (JSON.stringify(before.itemIds) !== JSON.stringify(rec.itemIds)) ch.push({ zh: `涵蓋測試 ${before.itemIds.length} → ${rec.itemIds.length} 項`, en: `Tests ${before.itemIds.length} → ${rec.itemIds.length}` });
+      if (JSON.stringify(before.vendorIds) !== JSON.stringify(rec.vendorIds)) ch.push({ zh: `指派供應商 ${before.vendorIds.length} → ${rec.vendorIds.length} 家`, en: `Vendors ${before.vendorIds.length} → ${rec.vendorIds.length}` });
+      if (JSON.stringify(before.standard) !== JSON.stringify(rec.standard)) ch.push({ zh: "對應標準已更新", en: "Standard updated" });
+      if ((before.name || "") !== rec.name) ch.push({ zh: `產品名稱 → ${rec.name || "—"}`, en: `Product name → ${rec.name || "—"}` });
+      addLog({ action: "update", entity: "testcode", targetId: id, targetName: { zh: rec.code, en: rec.code }, changes: ch.length ? ch : [{ zh: "內容微調", en: "Minor edits" }] });
+    } else {
+      testcodes.push(rec);
+      addLog({ action: "create", entity: "testcode", targetId: id, targetName: { zh: rec.code, en: rec.code }, changes: [{ zh: "新增測試代號", en: "Created test code" }] });
+    }
+    save(KEYS.testcodes, testcodes);
+    emit();
+  }
+  function testcodes_delete(id) {
+    const i = testcodes.findIndex((c) => c.id === id);
+    if (i < 0) return;
+    const rec = testcodes[i];
+    testcodes.splice(i, 1);
+    save(KEYS.testcodes, testcodes);
+    addLog({ action: "delete", entity: "testcode", targetId: id, targetName: { zh: rec.code, en: rec.code }, changes: [{ zh: "刪除測試代號", en: "Deleted test code" }] });
+    emit();
+  }
+  const blankTestcode = () => ({ code: "", name: "", standard: "", params: [], photoBike: "", photoSpec: "", itemIds: [], vendorIds: [] });
+  const newTestcodeKey = () => "tc_" + Date.now().toString(36);
+  /* auto product code: <bike category>-<serial>, e.g. MTB-01 */
+  function nextTestcodeCode(cat) {
+    const prefix = String(cat || "").trim();
+    if (!prefix) return "";
+    let n = 0;
+    testcodes.forEach((c) => {
+      const m = String(c.code || "").match(new RegExp("^" + prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "-(\\d+)$", "i"));
+      if (m) n = Math.max(n, +m[1]);
+    });
+    return prefix + "-" + String(n + 1).padStart(2, "0");
+  }
+
+  /* ---- bike categories (車款分類) — admin-editable dropdown source ---- */
+  const bikecats_list = () => bikecats;
+  function bikecats_add(cat) {
+    const c = String(cat || "").trim();
+    if (!c || bikecats.some((x) => x.toLowerCase() === c.toLowerCase())) return;
+    bikecats.push(c);
+    save(KEYS.bikecats, bikecats);
+    addLog({ action: "create", entity: "bikecat", targetId: c, targetName: { zh: c, en: c }, changes: [{ zh: "新增車款分類", en: "Added bike category" }] });
+    emit();
+  }
+  function bikecats_remove(cat) {
+    const i = bikecats.indexOf(cat);
+    if (i < 0) return;
+    bikecats.splice(i, 1);
+    save(KEYS.bikecats, bikecats);
+    addLog({ action: "delete", entity: "bikecat", targetId: cat, targetName: { zh: cat, en: cat }, changes: [{ zh: "刪除車款分類", en: "Removed bike category" }] });
+    emit();
+  }
+  /* codes assigned to one vendor */
+  const testcodes_forVendor = (vendorId) => testcodes.filter((c) => (c.vendorIds || []).indexOf(vendorId) >= 0);
+  /* Set of itemIds a vendor may see, or null = no restriction (no assignments) */
+  function testcodes_itemIdsForVendor(vendorId) {
+    const mine = testcodes_forVendor(vendorId);
+    if (!mine.length) return null;
+    const s = {};
+    mine.forEach((c) => (c.itemIds || []).forEach((id) => { s[id] = true; }));
+    return s;
+  }
+  /* current signed-in vendor's allowed item-id map, or null = no restriction.
+     Used by Home, the fixtures overview and the stock-take pages so an
+     assigned vendor only ever sees the tests — and the jigs/equipment — that
+     belong to their products. Admin and unassigned vendors see everything. */
+  window.bffAllowedItemIds = function () {
+    const u = window.AUTH && window.AUTH.get && window.AUTH.get();
+    if (!u || u.role === "admin") return null;
+    // A vendor with NO product-code assignment gets an EMPTY set (sees no
+    // tests / no jigs / no equipment), NOT null — unassigned vendors must have
+    // zero fixture & equipment demand until admin assigns them a product.
+    return testcodes_itemIdsForVendor(u.id) || {};
+  };
+
   /* ---- maintenance: re-compress every stored data-URI image in place ----
      Recovers a dataset that has grown past Firestore's 1 MiB master-doc limit
      because of large admin-uploaded photos. Only touches base64 data-URIs;
@@ -443,6 +605,57 @@
   }
   const newEquipKey = () => "e_" + Date.now().toString(36);
 
+  /* ---- per-vendor step comparison photos (供應商實拍對比照) ----
+     Vendors CANNOT edit the shared/official step image (item.steps[i].image —
+     only the admin's TestEditor writes that). Instead each vendor may attach
+     their OWN photo alongside it, purely for self-comparison; other vendors
+     never see it. Stored per-vendor as one map so it mirrors the existing
+     bff_stock / bff_report cloud-sync pattern (see cloud.js):
+       localStorage "bff:stepphoto:<vendorId>" -> { "<itemId>:<stepIndex>": dataUri }
+     Admin's browser additionally receives every vendor's doc via cloud.js'
+     collection subscription (same as stock/report), so admin can review
+     submissions read-only; admin still cannot overwrite them. */
+  function stepphoto_key(itemId, stepIndex) { return itemId + ":" + stepIndex; }
+  function stepphoto_mapFor(vendorId) {
+    try { return JSON.parse(localStorage.getItem("bff:stepphoto:" + vendorId) || "{}"); } catch (e) { return {}; }
+  }
+  function stepphoto_get(vendorId, itemId, stepIndex) {
+    if (!vendorId) return null;
+    return stepphoto_mapFor(vendorId)[stepphoto_key(itemId, stepIndex)] || null;
+  }
+  function stepphoto_set(vendorId, itemId, stepIndex, dataUri) {
+    if (!vendorId) return;
+    const map = stepphoto_mapFor(vendorId);
+    map[stepphoto_key(itemId, stepIndex)] = dataUri;
+    try { localStorage.setItem("bff:stepphoto:" + vendorId, JSON.stringify(map)); } catch (e) {}
+    window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
+  }
+  function stepphoto_remove(vendorId, itemId, stepIndex) {
+    if (!vendorId) return;
+    const map = stepphoto_mapFor(vendorId);
+    delete map[stepphoto_key(itemId, stepIndex)];
+    try { localStorage.setItem("bff:stepphoto:" + vendorId, JSON.stringify(map)); } catch (e) {}
+    window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
+  }
+  /* all of one vendor's submissions, as [{itemId, stepIndex, dataUri}] */
+  function stepphoto_forVendor(vendorId) {
+    const map = stepphoto_mapFor(vendorId);
+    return Object.keys(map).map((k) => {
+      const idx = k.lastIndexOf(":");
+      return { itemId: k.slice(0, idx), stepIndex: +k.slice(idx + 1), dataUri: map[k] };
+    });
+  }
+  /* admin-only: every vendor's submission for one item+step, as [{vendorId, dataUri}] */
+  function stepphoto_allSubmissions(itemId, stepIndex) {
+    const key = stepphoto_key(itemId, stepIndex);
+    const out = [];
+    (vendors || []).forEach((v) => {
+      const uri = stepphoto_mapFor(v.id)[key];
+      if (uri) out.push({ vendorId: v.id, dataUri: uri });
+    });
+    return out;
+  }
+
   /* ---- snapshot backup / restore (stand-in for cloud sync) ---- */
   function collectStock() {
     const out = {};
@@ -451,7 +664,7 @@
   }
   function exportSnapshot() {
     return { format: "bff-snapshot", version: 1, at: Date.now(),
-      items: clone(items), vendors: clone(vendors), parts: clone(parts), equipment: clone(equipment), log: clone(log), stock: collectStock() };
+      items: clone(items), vendors: clone(vendors), parts: clone(parts), equipment: clone(equipment), testcodes: clone(testcodes), bikecats: clone(bikecats), log: clone(log), stock: collectStock() };
   }
   function importSnapshot(snap) {
     if (!snap || snap.format !== "bff-snapshot") throw new Error("格式不符 / Invalid snapshot file");
@@ -459,9 +672,11 @@
     vendors.length = 0; (snap.vendors || []).forEach((v) => vendors.push(v));
     Object.keys(parts).forEach((k) => delete parts[k]); Object.assign(parts, snap.parts || {});
     if (snap.equipment) { Object.keys(equipment).forEach((k) => delete equipment[k]); Object.assign(equipment, snap.equipment); }
+    if (snap.testcodes) { testcodes.length = 0; snap.testcodes.forEach((c) => testcodes.push(c)); }
+    if (snap.bikecats && snap.bikecats.length) { bikecats.length = 0; snap.bikecats.forEach((c) => bikecats.push(c)); }
     log.length = 0; (snap.log || []).forEach((e) => log.push(e));
     migrateEquip();
-    save(KEYS.items, items); save(KEYS.vendors, vendors); save(KEYS.parts, parts); save(KEYS.equipment, equipment); save(KEYS.log, log);
+    save(KEYS.items, items); save(KEYS.vendors, vendors); save(KEYS.parts, parts); save(KEYS.equipment, equipment); save(KEYS.testcodes, testcodes); save(KEYS.bikecats, bikecats); save(KEYS.log, log);
     if (snap.stock) Object.keys(snap.stock).forEach((vid) => { try { localStorage.setItem("bff:stock:" + vid, JSON.stringify(snap.stock[vid])); } catch (e) {} });
     addLog({ action: "update", entity: "system", targetId: "restore", targetName: { zh: "資料還原", en: "Data restore" }, changes: [{ zh: "已從備份檔還原全部資料", en: "Restored all data from snapshot" }] });
     emit();
@@ -479,6 +694,8 @@
     if (snap.vendors) { vendors.length = 0; snap.vendors.forEach((v) => vendors.push(v)); save(KEYS.vendors, vendors); }
     if (snap.parts) { Object.keys(parts).forEach((k) => delete parts[k]); Object.assign(parts, snap.parts); save(KEYS.parts, parts); }
     if (snap.equipment) { Object.keys(equipment).forEach((k) => delete equipment[k]); Object.assign(equipment, snap.equipment); save(KEYS.equipment, equipment); }
+    if (snap.testcodes) { testcodes.length = 0; snap.testcodes.forEach((c) => testcodes.push(c)); normalizeTestcodes(); save(KEYS.testcodes, testcodes); }
+    if (snap.bikecats && snap.bikecats.length) { bikecats.length = 0; snap.bikecats.forEach((c) => bikecats.push(c)); save(KEYS.bikecats, bikecats); }
     if (snap.log) { log.length = 0; snap.log.forEach((e) => log.push(e)); save(KEYS.log, log); }
     if (snap.adminCode) {
       if (looksLikeHash(snap.adminCode)) { try { localStorage.setItem("bff:admincode", snap.adminCode); } catch (e) {} }
@@ -489,7 +706,7 @@
     setTimeout(() => { applyingRemote = false; }, 0);
   }
   const isApplyingRemote = () => applyingRemote;
-  const snapshotData = () => ({ items: clone(items), vendors: clone(vendors), parts: clone(parts), equipment: clone(equipment), log: clone(log), adminCode: admincode_get() });
+  const snapshotData = () => ({ items: clone(items), vendors: clone(vendors), parts: clone(parts), equipment: clone(equipment), testcodes: clone(testcodes), bikecats: clone(bikecats), log: clone(log), adminCode: admincode_get() });
 
   function admincode_get() { try { return localStorage.getItem("bff:admincode") || DEFAULT_ADMIN_HASH; } catch (e) { return DEFAULT_ADMIN_HASH; } }
   async function admincode_set(code) {
@@ -502,11 +719,13 @@
   }
 
   function resetAll() {
-    [KEYS.items, KEYS.vendors, KEYS.parts, KEYS.equipment, KEYS.log].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} if (useIDB) window.KV.del(k); });
+    [KEYS.items, KEYS.vendors, KEYS.parts, KEYS.equipment, KEYS.testcodes, KEYS.bikecats, KEYS.log].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} if (useIDB) window.KV.del(k); });
     items.length = 0; clone(defaults.items).forEach((i) => items.push(i));
     vendors.length = 0; clone(defaults.vendors).forEach((v) => vendors.push(v));
     Object.keys(parts).forEach((k) => delete parts[k]); Object.assign(parts, clone(defaults.parts));
     Object.keys(equipment).forEach((k) => delete equipment[k]); Object.assign(equipment, clone(defaults.equipment));
+    testcodes.length = 0;
+    bikecats.length = 0; clone(defaults.bikecats).forEach((c) => bikecats.push(c));
     log.length = 0;
     emit();
   }
@@ -518,6 +737,7 @@
       category: { zh: "", en: "" },
       name: { zh: "", en: "" },
       standard: "",
+      bike: "",
       clause: "",
       status: "draft",
       schematic: window.DATA.IMG.frameSchematic,
@@ -536,16 +756,19 @@
     vendors_list, vendors_save, vendors_delete, nextVendorId, slugId,
     parts_list, parts_get, parts_save, parts_delete,
     equipment_list, equipment_get, equipment_save, equipment_delete, compactImages,
+    testcodes_list, testcodes_get, testcodes_save, testcodes_delete, blankTestcode, newTestcodeKey, testcodes_forVendor, testcodes_itemIdsForVendor, nextTestcodeCode,
+    bikecats_list, bikecats_add, bikecats_remove,
     exportSnapshot, importSnapshot, hydrate, isApplyingRemote, snapshotData,
     admincode_get, admincode_set,
     log_list, addLog, resetAll,
+    stepphoto_get, stepphoto_set, stepphoto_remove, stepphoto_forVendor, stepphoto_allSubmissions,
   };
 
   /* ---- async boot: prefer IndexedDB; migrate any legacy localStorage data ---- */
   (async function boot() {
     if (!useIDB) return;
-    const specs = [KEYS.items, KEYS.vendors, KEYS.parts, KEYS.equipment, KEYS.log];
-    const liveFor = (k) => k === KEYS.parts ? parts : k === KEYS.equipment ? equipment : k === KEYS.items ? items : k === KEYS.vendors ? vendors : log;
+    const specs = [KEYS.items, KEYS.vendors, KEYS.parts, KEYS.equipment, KEYS.testcodes, KEYS.bikecats, KEYS.log];
+    const liveFor = (k) => k === KEYS.parts ? parts : k === KEYS.equipment ? equipment : k === KEYS.items ? items : k === KEYS.vendors ? vendors : k === KEYS.testcodes ? testcodes : k === KEYS.bikecats ? bikecats : log;
     let changed = false;
     for (const k of specs) {
       const v = await window.KV.get(k);
@@ -554,6 +777,8 @@
         else if (k === KEYS.equipment) { if (v && Object.keys(v).length) { Object.keys(equipment).forEach((x) => delete equipment[x]); Object.assign(equipment, v); } else { window.KV.set(k, equipment).catch(() => {}); } }
         else if (k === KEYS.items) { items.length = 0; v.forEach((x) => items.push(x)); }
         else if (k === KEYS.vendors) { vendors.length = 0; v.forEach((x) => vendors.push(x)); }
+        else if (k === KEYS.testcodes) { testcodes.length = 0; v.forEach((x) => testcodes.push(x)); }
+        else if (k === KEYS.bikecats) { if (v && v.length) { bikecats.length = 0; v.forEach((x) => bikecats.push(x)); } else { window.KV.set(k, bikecats).catch(() => {}); } }
         else if (k === KEYS.log) { log.length = 0; v.forEach((x) => log.push(x)); }
         changed = true;
       } else {
@@ -563,6 +788,8 @@
       }
     }
     if (migrateEquip()) { save(KEYS.items, items); changed = true; }
+    if (sanitizeItems()) changed = true;
+    if (normalizeTestcodes()) changed = true;
     markEquipMigrated();
     if (changed) emit();
   })();

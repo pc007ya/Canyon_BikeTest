@@ -38,11 +38,13 @@ function fmtStamp(ts, lang) {
 /* part key -> { part, uses, totalQty/required, stock, shortage, state, overridden, by, at } */
 function buildFixtureUsage() {
   const PARTS = window.DATA.PARTS;
+  const allowed = window.bffAllowedItemIds ? window.bffAllowedItemIds() : null; // vendor with assignments → only their tests' jigs
   const map = new Map();
   Object.entries(PARTS).forEach(([key, part]) => {
     map.set(key, { key, part, uses: [], totalQty: 0 });
   });
   window.DATA.ITEMS.forEach((item) => {
+    if (allowed && !allowed[item.id]) return;
     item.fixtures.forEach((f) => {
       const rec = map.get(f.key);
       if (!rec) return;
@@ -50,7 +52,7 @@ function buildFixtureUsage() {
       rec.totalQty += f.qty;
     });
   });
-  const out = [...map.values()];
+  const out = [...map.values()].filter((r) => !allowed || r.uses.length > 0);
   out.forEach((r) => {
     const e = getEntry(r.key);
     r.required = r.totalQty;

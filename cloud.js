@@ -113,7 +113,7 @@ function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve
 })();
 
 /* ---- sync engine ---- */
-let _unsubData = null, _unsubStock = null, _unsubReport = null, _unsubLoginLog = null, _writeTimer = null;
+let _unsubData = null, _unsubStock = null, _unsubReport = null, _unsubLoginLog = null, _unsubStepPhoto = null, _writeTimer = null;
 /* Guard against a real race: our own debounced write (800ms) can be beaten by
    a late/out-of-order remote snapshot carrying OLDER data, which would
    silently revert an edit the admin just made (e.g. a version/name change)
@@ -199,6 +199,25 @@ function startSync() {
     }, (e) => setStatus("error", e.message));
   }
 
+  // 3d) subscribe to vendor step-comparison-photo docs (same role split as stock/report).
+  //     Admin gets read-only visibility into every vendor's submissions; a
+  //     vendor only pulls their own (and never writes anyone else's).
+  if (me && me.role === "admin") {
+    _unsubStepPhoto = fsMod.onSnapshot(fsMod.collection(db, "bff_stepphoto"), (qs) => {
+      qs.docChanges().forEach((ch) => {
+        if (ch.doc.metadata.hasPendingWrites) return;
+        try { localStorage.setItem("bff:stepphoto:" + ch.doc.id, JSON.stringify(ch.doc.data())); } catch (e) {}
+      });
+      window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
+    }, (e) => setStatus("error", e.message));
+  } else if (me) {
+    _unsubStepPhoto = fsMod.onSnapshot(fsMod.doc(db, "bff_stepphoto", me.id), (snap) => {
+      if (snap.metadata.hasPendingWrites) return;
+      if (snap.exists()) { try { localStorage.setItem("bff:stepphoto:" + me.id, JSON.stringify(snap.data())); } catch (e) {} }
+      window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
+    }, (e) => setStatus("error", e.message));
+  }
+
   // 4) push local data changes (debounced)
   window.addEventListener("bff:datachange", onLocalData);
   // 5) push local stock changes for the active vendor
@@ -208,16 +227,20 @@ function startSync() {
   // 7) push local login-log changes for the active vendor (fires on login + once IP resolves)
   window.addEventListener("bff:loginlogchange", onLocalLoginLog);
   if (me && me.role !== "admin") onLocalLoginLog(); // push any login recorded before this connection was ready
+  // 8) push local step-comparison-photo changes for the active vendor
+  window.addEventListener("bff:stepphotochange", onLocalStepPhoto);
 }
 function stopSync() {
   if (_unsubData) { _unsubData(); _unsubData = null; }
   if (_unsubStock) { _unsubStock(); _unsubStock = null; }
   if (_unsubReport) { _unsubReport(); _unsubReport = null; }
   if (_unsubLoginLog) { _unsubLoginLog(); _unsubLoginLog = null; }
+  if (_unsubStepPhoto) { _unsubStepPhoto(); _unsubStepPhoto = null; }
   window.removeEventListener("bff:datachange", onLocalData);
   window.removeEventListener("bff:stockchange", onLocalStock);
   window.removeEventListener("bff:reportchange", onLocalReport);
   window.removeEventListener("bff:loginlogchange", onLocalLoginLog);
+  window.removeEventListener("bff:stepphotochange", onLocalStepPhoto);
 }
 function onLocalData() {
   if (window.STORE.isApplyingRemote()) return;
@@ -268,4 +291,13 @@ function onLocalLoginLog() {
   let list = [];
   try { list = JSON.parse(localStorage.getItem("bff:loginlog:" + u.id) || "[]"); } catch (e) {}
   fsMod.setDoc(fsMod.doc(db, "bff_loginlog", u.id), { entries: list }).catch((e) => setStatus("error", e.message));
+}
+function onLocalStepPhoto() {
+  if (window.STORE.isApplyingRemote()) return;
+  const u = window.AUTH && window.AUTH.get && window.AUTH.get();
+  if (!u || u.role === "admin") return; // only vendors write their own comparison photos
+  const { db, fsMod } = _api;
+  let map = {};
+  try { map = JSON.parse(localStorage.getItem("bff:stepphoto:" + u.id) || "{}"); } catch (e) {}
+  fsMod.setDoc(fsMod.doc(db, "bff_stepphoto", u.id), map).catch((e) => setStatus("error", e.message));
 }

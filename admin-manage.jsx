@@ -69,11 +69,13 @@ function TestEditor({ id, lang, t, onDone }) {
   };
   function loadStepImg(i, file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 1100, 0.7).then((src) => setStep(i, { image: src })).catch(() => {});
+    window.bffResizeImage(file, 1100, 0.7).then((src) => { setStep(i, { image: src }); setErr(""); })
+      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
   function loadSchematic(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 1400, 0.72).then((src) => set({ schematic: src })).catch(() => {});
+    window.bffResizeImage(file, 1400, 0.72).then((src) => { set({ schematic: src }); setErr(""); })
+      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
 
   function save() {
@@ -109,6 +111,12 @@ function TestEditor({ id, lang, t, onDone }) {
           </Field>
           <Field label={lang === "zh" ? "對應標準" : "Standard"}><input className="inp mono" value={d.standard} onChange={(e) => set({ standard: e.target.value })} placeholder="ISO 4210-6:2023" /></Field>
           <Field label={lang === "zh" ? "標準條文" : "Clause"}><input className="inp mono" value={d.clause} onChange={(e) => set({ clause: e.target.value })} placeholder="§4.4" /></Field>
+          <Field label={lang === "zh" ? "車款" : "Bike type"}>
+            <select className="inp" value={d.bike || ""} onChange={(e) => set({ bike: e.target.value })}>
+              <option value="">{lang === "zh" ? "（未指定 · 適用全部車款）" : "(unset · all types)"}</option>
+              {window.STORE.bikecats_list().map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
         </div>
         <BiField label={lang === "zh" ? "分類" : "Category"} value={d.category} onChange={(v) => set({ category: v })} ph={{ zh: "車架", en: "Frame" }} />
         <BiField label={lang === "zh" ? "測試名稱" : "Test name"} value={d.name} onChange={(v) => set({ name: v })} />
@@ -325,7 +333,8 @@ function PartEditor({ pkey, lang, onClose }) {
   const set = (patch) => setD((p) => ({ ...p, ...patch }));
   function loadImg(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 900, 0.72).then((src) => set({ image: src })).catch(() => {});
+    window.bffResizeImage(file, 900, 0.72).then((src) => { set({ image: src }); setErr(""); })
+      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
   function save() {
     if (!d.code.trim()) {setErr(lang === "zh" ? "請輸入制具編號" : "Enter a part number");return;}
@@ -384,7 +393,8 @@ function EquipmentEditor({ ekey, lang, onClose }) {
   const set = (patch) => setD((p) => ({ ...p, ...patch }));
   function loadImg(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 900, 0.72).then((src) => set({ image: src })).catch(() => {});
+    window.bffResizeImage(file, 900, 0.72).then((src) => { set({ image: src }); setErr(""); })
+      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
   function save() {
     if (!d.code.trim()) {setErr(lang === "zh" ? "請輸入設備編號" : "Enter a code");return;}
@@ -797,4 +807,4 @@ function AdminManage({ lang, t, onEdit }) {
 
 }
 
-Object.assign(window, { TestEditor, AdminManage });
+Object.assign(window, { TestEditor, AdminManage, Field, BiField });
