@@ -450,6 +450,38 @@ function Login({ lang, setLang, t, onLogin }) {
 }
 
 /* ================= APP ================= */
+/* Compact cloud-sync status light for the top bar (mirrors the fuller status
+   inside Manage → Backup → CloudPanel). Only shown once cloud is configured;
+   in pure local mode there is nothing to report. Admin can click it to jump to
+   the backup panel where the full status + sign-in lives. */
+function CloudStatusLight({ lang, admin, onOpen }) {
+  const [, bump] = uState(0);
+  uEffect(() => {
+    const h = () => bump((n) => n + 1);
+    window.addEventListener("bff:cloudstatus", h);
+    return () => window.removeEventListener("bff:cloudstatus", h);
+  }, []);
+  const cloud = window.CLOUD || { configured: false, status: "local" };
+  // Always render — never hide. Vendors and admin both see the light; when the
+  // browser hasn't connected to the cloud it shows a neutral grey "本機" state
+  // rather than disappearing (a hidden light reads as "broken" to the user).
+  const ST = {
+    connecting: { zh: "連線中", en: "Connecting", cls: "warn" },
+    online: { zh: "已同步", en: "Synced", cls: "ok" },
+    signedout: { zh: "待登入", en: "Sign in", cls: "warn" },
+    error: { zh: "連線錯誤", en: "Error", cls: "bad" },
+    local: { zh: "本機", en: "Local", cls: "local" },
+  };
+  const s = ST[cloud.status] || ST.local;
+  const title = (lang === "zh" ? "雲端同步：" : "Cloud sync: ") + (lang === "zh" ? s.zh : s.en) + (cloud.message ? "\n" + cloud.message : "");
+  return (
+    <button className={"cloudlight cl-" + s.cls} title={title} onClick={admin && onOpen ? onOpen : undefined} aria-label={title}>
+      <span className="cloudlight-dot" />
+      <span className="cloudlight-txt">{lang === "zh" ? s.zh : s.en}</span>
+    </button>);
+
+}
+
 function App() {
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
     "direction": "blueprint",
@@ -609,6 +641,7 @@ function App() {
           }
         </nav>
         <div className="topbar-right">
+          <CloudStatusLight lang={lang} admin={admin} onOpen={admin ? goManage : undefined} />
           {admin && <NotificationCenter lang={lang} onOpenStock={goAdmin} />}
           {!admin && <VendorAlertBell lang={lang} onGoStock={goStock} onGoEquip={goEquipStock} />}
           <div className={"vendor-chip" + (admin ? " is-admin" : "")} title={L2(vendor.name, lang)}>

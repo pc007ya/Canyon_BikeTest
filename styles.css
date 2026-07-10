@@ -821,6 +821,19 @@ html[data-theme="workshop"] .pe-img img { mix-blend-mode: normal; }
 .cs-warn .cs-dot { background: var(--warn); }
 .cs-bad { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
 .cs-bad .cs-dot { background: var(--warn); }
+/* compact cloud-sync light in the top bar (left of the notification bell) */
+.cloudlight { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: var(--topbar-ink, #fff);
+  font-size: 12px; font-weight: 600; font-family: var(--mono); cursor: default; white-space: nowrap; }
+.cloudlight[onclick], .cloudlight.cl-bad, .cloudlight.cl-warn { cursor: pointer; }
+.cloudlight-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.cloudlight.cl-ok .cloudlight-dot { background: #35c46a; box-shadow: 0 0 0 3px rgba(53,196,106,.22); }
+.cloudlight.cl-warn .cloudlight-dot { background: #e6a52b; box-shadow: 0 0 0 3px rgba(230,165,43,.22); }
+.cloudlight.cl-bad .cloudlight-dot { background: #e5533b; box-shadow: 0 0 0 3px rgba(229,83,59,.22); animation: cloudlight-pulse 1.6s ease-in-out infinite; }
+.cloudlight.cl-local .cloudlight-dot { background: #9aa4b2; }
+.cloudlight.cl-local { opacity: .8; }
+@keyframes cloudlight-pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+@media (max-width: 720px) { .cloudlight-txt { display: none; } .cloudlight { padding: 0 9px; } }
 .cs-idle .cs-dot { background: var(--ink-3); }
 .cloud-setup { display: flex; flex-direction: column; gap: 12px; }
 .cloud-cfg { line-height: 1.5; }

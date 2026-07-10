@@ -121,33 +121,96 @@ let _unsubData = null, _unsubStock = null, _unsubReport = null, _unsubLoginLog =
    monotonic `_rev`; incoming snapshots older than the last rev WE know about
    are ignored instead of blindly overwriting local state. */
 let _lastRev = 0;
+
+/* ---- master-doc chunking ----
+   Firestore caps ANY single document at 1,048,576 bytes. The master snapshot
+   (all items + libraries + product photos as data-URIs) can exceed that. So
+   instead of one `bff/data` doc we may split the serialized snapshot across
+   several docs:
+     bff/data        = { _rev, chunked:true, chunks:N }   (small meta)
+     bff/data_0..N-1 = { _rev, i, s:<slice of JSON string> }
+   When the payload is small we keep the legacy single inline doc (no `chunked`
+   flag) so old readers still work. Reassembly requires every chunk present and
+   sharing the meta's _rev, else we wait for the next consistent snapshot. */
+const CHUNK_CHARS = 700000; // ~700 KB per chunk doc, safely under the 1 MB cap
+function chunkSafe(json) {
+  const parts = [];
+  let i = 0;
+  while (i < json.length) {
+    let end = Math.min(i + CHUNK_CHARS, json.length);
+    if (end < json.length) {
+      const code = json.charCodeAt(end - 1); // never split a surrogate pair (emoji)
+      if (code >= 0xD800 && code <= 0xDBFF) end--;
+    }
+    parts.push(json.slice(i, end));
+    i = end;
+  }
+  return parts;
+}
+function writeMaster(data) {
+  const { db, fsMod } = _api;
+  const json = JSON.stringify(data);
+  const dataRef = fsMod.doc(db, "bff", "data");
+  if (json.length <= 900000) {
+    // small enough for one doc — legacy inline format
+    return fsMod.setDoc(dataRef, data);
+  }
+  const parts = chunkSafe(json);
+  const batch = fsMod.writeBatch(db);
+  batch.set(dataRef, { _rev: data._rev || 0, chunked: true, chunks: parts.length, ts: Date.now() });
+  parts.forEach((s, i) => batch.set(fsMod.doc(db, "bff", "data_" + i), { _rev: data._rev || 0, i: i, s: s }));
+  return batch.commit();
+}
+async function readMaster(meta) {
+  if (!meta || !meta.chunked) return meta; // legacy inline doc IS the data
+  const { db, fsMod } = _api;
+  const gets = [];
+  for (let i = 0; i < meta.chunks; i++) gets.push(fsMod.getDoc(fsMod.doc(db, "bff", "data_" + i)));
+  const snaps = await Promise.all(gets);
+  let json = "";
+  for (let i = 0; i < meta.chunks; i++) {
+    const s = snaps[i];
+    if (!s.exists()) throw new Error("missing chunk " + i);
+    const d = s.data();
+    if ((d._rev || 0) !== (meta._rev || 0)) throw new Error("chunk rev mismatch");
+    json += d.s || "";
+  }
+  return JSON.parse(json);
+}
 function startSync() {
   const { db, fsMod } = _api;
   const dataRef = fsMod.doc(db, "bff", "data");
 
   // 1) initial pull (or seed if cloud empty — admin only, vendors can't write master data)
-  fsMod.getDoc(dataRef).then((snap) => {
+  fsMod.getDoc(dataRef).then(async (snap) => {
     if (snap.exists()) {
-      const d = snap.data();
-      if ((d._rev || 0) >= _lastRev) { _lastRev = d._rev || _lastRev; window.STORE.hydrate(d); }
+      const meta = snap.data();
+      if ((meta._rev || 0) >= _lastRev) {
+        try { const d = await readMaster(meta); _lastRev = meta._rev || _lastRev; window.STORE.hydrate(d); }
+        catch (e) { /* incomplete/mid-write chunk set — a later snapshot will be consistent */ }
+      }
     } else {
       const u = window.AUTH && window.AUTH.get && window.AUTH.get();
       if (u && u.role === "admin") {
         const seed = window.STORE.snapshotData();
         seed._rev = ++_lastRev;
-        fsMod.setDoc(dataRef, seed);
+        writeMaster(seed).catch((e) => setStatus("error", e.message));
       }
     }
   }).catch((e) => setStatus("error", e.message));
 
   // 2) subscribe to remote data changes
-  _unsubData = fsMod.onSnapshot(dataRef, (snap) => {
+  _unsubData = fsMod.onSnapshot(dataRef, async (snap) => {
     if (!snap.exists()) return;
     if (snap.metadata.hasPendingWrites) return; // ignore our own optimistic write
-    const d = snap.data();
-    if ((d._rev || 0) < _lastRev) return; // stale/out-of-order — do not clobber a newer local edit
-    _lastRev = d._rev || _lastRev;
-    window.STORE.hydrate(d);
+    const meta = snap.data();
+    if ((meta._rev || 0) < _lastRev) return; // stale/out-of-order — do not clobber a newer local edit
+    try {
+      const d = await readMaster(meta);
+      if ((meta._rev || 0) < _lastRev) return; // re-check after async chunk fetch
+      _lastRev = meta._rev || _lastRev;
+      window.STORE.hydrate(d);
+    } catch (e) { /* chunks not all present yet — wait for the next snapshot */ }
   }, (e) => setStatus("error", e.message));
 
   // 3) subscribe to vendor stock docs.
@@ -255,15 +318,16 @@ function onLocalData() {
     const { db, fsMod } = _api;
     const data = window.STORE.snapshotData();
     data._rev = myRev;
-    // Firestore caps any one document at 1,048,576 bytes. Guard proactively so
-    // the admin gets an actionable hint instead of a raw rejected write.
+    // Firestore caps any ONE document at 1,048,576 bytes; we split the payload
+    // across several docs (writeMaster) so the whole dataset is no longer
+    // bounded by that. Keep a generous outer guard for the batch total (~9 MB).
     let size = 0;
     try { size = new Blob([JSON.stringify(data)]).size; } catch (e) { try { size = JSON.stringify(data).length; } catch (e2) {} }
-    if (size > 1000000) {
-      setStatus("error", "資料超過雲端單檔上限 1MB（目前約 " + (size / 1048576).toFixed(2) + "MB）。請到「管理 → 備份」按『壓縮現有圖片』後再試。 / Data exceeds the 1MB cloud limit — use Manage → Backup → “Compress existing images”.");
+    if (size > 9000000) {
+      setStatus("error", "資料過大（>9MB），無法同步。請到「管理 → 備份」壓縮圖片，或移除部分大圖。 / Dataset too large (>9MB) to sync — compress or remove large images.");
       return;
     }
-    fsMod.setDoc(fsMod.doc(db, "bff", "data"), data).catch((e) => setStatus("error", e.message));
+    writeMaster(data).catch((e) => setStatus("error", e.message));
   }, 800);
 }
 function onLocalStock() {
