@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── 管理員 email（與 Firestore 規則一致）──
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+             'pc007ya@gmail.com'
+           ];
+    }
+    function signedIn() { return request.auth != null; }
+    function okImage() {
+      return request.resource.size < 5 * 1024 * 1024               // 單檔 < 5MB
+        && request.resource.contentType.matches('image/.*');       // 只收圖片
+    }
+
+    // 官方素材（制具／設備／步驟／示意圖／產品圖）：登入可讀，管理員可寫
+    match /catalog/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isAdmin() && okImage();
+      allow delete: if isAdmin();
+    }
+
+    // 供應商上傳（報告照、步驟實拍）：登入可讀（管理員需檢視）；登入者可寫圖片
+    match /vendors/{vendorId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && okImage();
+      allow delete: if signedIn();
+    }
+
+    // 其餘一律拒絕
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

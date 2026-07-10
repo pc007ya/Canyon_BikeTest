@@ -69,13 +69,15 @@ function TestEditor({ id, lang, t, onDone }) {
   };
   function loadStepImg(i, file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 1100, 0.7).then((src) => { setStep(i, { image: src }); setErr(""); })
-      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
+    const path = "catalog/steps/" + (d.id || "item") + "_" + i + ".jpg";
+    window.bffUploadImage(file, 1100, 0.7, path).then((src) => {setStep(i, { image: src });setErr("");}).
+    catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
   function loadSchematic(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 1400, 0.72).then((src) => { set({ schematic: src }); setErr(""); })
-      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
+    const path = "catalog/schematic/" + (d.id || "item") + ".jpg";
+    window.bffUploadImage(file, 1400, 0.72, path).then((src) => {set({ schematic: src });setErr("");}).
+    catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
 
   function save() {
@@ -333,8 +335,8 @@ function PartEditor({ pkey, lang, onClose }) {
   const set = (patch) => setD((p) => ({ ...p, ...patch }));
   function loadImg(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 900, 0.72).then((src) => { set({ image: src }); setErr(""); })
-      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
+    window.bffUploadImage(file, 900, 0.72, "catalog/parts/" + (key || "part") + ".jpg").then((src) => {set({ image: src });setErr("");}).
+    catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
   function save() {
     if (!d.code.trim()) {setErr(lang === "zh" ? "請輸入制具編號" : "Enter a part number");return;}
@@ -393,8 +395,8 @@ function EquipmentEditor({ ekey, lang, onClose }) {
   const set = (patch) => setD((p) => ({ ...p, ...patch }));
   function loadImg(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    window.bffResizeImage(file, 900, 0.72).then((src) => { set({ image: src }); setErr(""); })
-      .catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
+    window.bffUploadImage(file, 900, 0.72, "catalog/equipment/" + (key || "equip") + ".jpg").then((src) => {set({ image: src });setErr("");}).
+    catch(() => setErr(lang === "zh" ? "上傳失敗（檔案不是圖片，或超過 20MB）" : "Upload failed (not an image, or over 20MB)"));
   }
   function save() {
     if (!d.code.trim()) {setErr(lang === "zh" ? "請輸入設備編號" : "Enter a code");return;}
@@ -524,6 +526,26 @@ function BackupPanel({ lang }) {
     }
     setBusy(false);
   }
+  const [migBusy, setMigBusy] = mState(false);
+  const [migProg, setMigProg] = mState(null);
+  async function migrate() {
+    if (!window.bffStorageAvailable || !window.bffStorageAvailable()) {
+      setMsg({ ok: false, t: lang === "zh" ? "雲端 Storage 未啟用或未連線。請先在 Firebase 啟用 Storage 並以管理員登入。" : "Storage not enabled / not connected. Enable Firebase Storage and sign in as admin first." });
+      return;
+    }
+    if (!window.confirm(lang === "zh" ? "將把所有內嵌圖片上傳到雲端 Storage 並改為網址，主資料會大幅縮小。過程可能需數十秒，確定開始？" : "Upload all embedded images to Storage and replace with URLs. May take a while. Start?")) return;
+    setMigBusy(true); setMigProg({ scanned: 0, moved: 0, failed: 0 });
+    setMsg({ ok: true, t: lang === "zh" ? "遷移中，請保持頁面開啟…" : "Migrating, keep the page open…" });
+    try {
+      const r = await window.STORE.migrateImagesToStorage((p) => setMigProg({ ...p }));
+      setMsg({ ok: true, t: lang === "zh" ?
+        `已遷移 ${r.moved}/${r.scanned} 張圖片到雲端 Storage${r.failed ? `（${r.failed} 張失敗，將保留原內嵌圖）` : ""}。主資料已縮小並重新同步。` :
+        `Moved ${r.moved}/${r.scanned} images to Storage${r.failed ? ` (${r.failed} failed, kept inline)` : ""}. Master data shrunk and re-synced.` });
+    } catch (e) {
+      setMsg({ ok: false, t: (lang === "zh" ? "遷移失敗：" : "Migration failed: ") + (e && e.message || e) });
+    }
+    setMigBusy(false);
+  }
   function exportFile() {
     const snap = window.STORE.exportSnapshot();
     const blob = new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" });
@@ -621,6 +643,15 @@ function BackupPanel({ lang }) {
           <h3 className="bk-h">{lang === "zh" ? "壓縮圖片以節省空間" : "Compress images to free space"}</h3>
           <p className="bk-p">{lang === "zh" ? "雲端同步將所有資料存成單一文件，上限 1 MB。若上傳示意圖後出現「空間不足」，按此可將所有已上傳圖片重新壓縮（縮小尺寸、轉 JPEG），不影響文字內容。" : "Cloud sync stores all data in one document capped at 1 MB. If uploading a schematic hits a size error, this re-compresses every uploaded image (downscale + JPEG) without touching text content."}</p>
           <button className="btn" onClick={compact} disabled={busy}><Icon name="image" size={16} />{busy ? lang === "zh" ? "壓縮中…" : "Compressing…" : lang === "zh" ? "壓縮現有圖片" : "Compress existing images"}</button>
+        </div>
+      </div>
+      <div className="bk-card">
+        <div className="bk-icon"><Icon name="cloud" size={22} /></div>
+        <div className="bk-main">
+          <h3 className="bk-h">{lang === "zh" ? "遷移舊圖到雲端 Storage" : "Migrate old images to Cloud Storage"}</h3>
+          <p className="bk-p">{lang === "zh" ? "一次性作業：把過去內嵌在資料裡的 base64 舊圖全部上傳到 Firebase Storage，改存為短網址。主資料文件會大幅縮小、徹底擺脫 1 MB 限制。需先在 Firebase 啟用 Storage 並以管理員登入。可重複執行（已是網址者自動略過）。" : "One-time: upload every base64 image embedded in the data to Firebase Storage and replace with short URLs. Shrinks the master document and removes the 1 MB ceiling. Requires Storage enabled and admin sign-in. Safe to re-run (URLs are skipped)."}</p>
+          <button className="btn" onClick={migrate} disabled={migBusy}><Icon name="cloud" size={16} />{migBusy ? (lang === "zh" ? "遷移中…" : "Migrating…") : (lang === "zh" ? "遷移舊圖到雲端" : "Migrate images to Storage")}</button>
+          {migBusy && migProg && <span className="bk-p mono" style={{ marginLeft: 12 }}>{lang === "zh" ? "已處理" : "done"} {migProg.moved}/{migProg.scanned}{migProg.failed ? " · " + (lang === "zh" ? "失敗" : "failed") + " " + migProg.failed : ""}</span>}
         </div>
       </div>
       <div className="bk-note">
@@ -751,7 +782,7 @@ function AdminManage({ lang, t, onEdit }) {
                     <div className="pcard-meta mono">{p.code || "—"}</div>
                     <div className="pcard-stat mono">{lang === "zh" ? "庫存" : "Stock"} {p.stock} · {lang === "zh" ? "儲位" : "Loc"} {p.loc || "—"}</div>
                     {(L(p.vendor) || L(p.material) || p.version) &&
-                    <div className="pcard-extra">
+                <div className="pcard-extra">
                       {L(p.vendor) && <span>{lang === "zh" ? "廠商" : "Vendor"} {L(p.vendor)}</span>}
                       {L(p.material) && <span>{lang === "zh" ? "材質" : "Material"} {L(p.material)}</span>}
                       {p.version && <span>{lang === "zh" ? "版本" : "Ver."} {p.version}</span>}
@@ -782,7 +813,7 @@ function AdminManage({ lang, t, onEdit }) {
                     <div className="pcard-meta mono">{p.code || "—"}</div>
                     <div className="pcard-stat mono">{lang === "zh" ? "庫存" : "Stock"} {p.stock} · {lang === "zh" ? "儲位" : "Loc"} {p.loc || "—"}</div>
                     {(L(p.vendor) || L(p.material) || p.version) &&
-                    <div className="pcard-extra">
+                <div className="pcard-extra">
                       {L(p.vendor) && <span>{lang === "zh" ? "廠商" : "Vendor"} {L(p.vendor)}</span>}
                       {L(p.material) && <span>{lang === "zh" ? "材質" : "Material"} {L(p.material)}</span>}
                       {p.version && <span>{lang === "zh" ? "版本" : "Ver."} {p.version}</span>}

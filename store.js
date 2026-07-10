@@ -554,6 +554,46 @@
     return { scanned, shrunk, before, after };
   }
 
+  /* One-time migration: move every remaining base64 data-URI image in the
+     master data OUT to Firebase Storage, replacing it with the returned https
+     URL. Shrinks the Firestore master doc dramatically. No-op offline (returns
+     moved:0). Safe to re-run — already-URL images are skipped. */
+  async function migrateImagesToStorage(onProgress) {
+    if (!window.bffStorageAvailable || !window.bffStorageAvailable()) {
+      return { available: false, scanned: 0, moved: 0, failed: 0 };
+    }
+    let scanned = 0, moved = 0, failed = 0;
+    async function move(uri, path) {
+      scanned++;
+      try {
+        const url = await window.bffUploadDataUri(uri, path);
+        if (typeof url === "string" && url.slice(0, 5) !== "data:") { moved++; return url; }
+        failed++; return uri;
+      } catch (e) { failed++; return uri; }
+    }
+    const tick = () => { if (typeof onProgress === "function") onProgress({ scanned, moved, failed }); };
+
+    for (const it of items) {
+      if (_isDataImg(it.schematic)) { it.schematic = await move(it.schematic, "catalog/schematic/" + it.id + ".jpg"); tick(); }
+      const steps = it.steps || [];
+      for (let i = 0; i < steps.length; i++) if (_isDataImg(steps[i].image)) { steps[i].image = await move(steps[i].image, "catalog/steps/" + it.id + "_" + i + ".jpg"); tick(); }
+    }
+    for (const k of Object.keys(parts)) if (_isDataImg(parts[k].image)) { parts[k].image = await move(parts[k].image, "catalog/parts/" + k + ".jpg"); tick(); }
+    for (const k of Object.keys(equipment)) if (_isDataImg(equipment[k].image)) { equipment[k].image = await move(equipment[k].image, "catalog/equipment/" + k + ".jpg"); tick(); }
+    for (const c of testcodes) {
+      if (_isDataImg(c.photoBike)) { c.photoBike = await move(c.photoBike, "catalog/testcodes/" + c.id + "_photoBike.jpg"); tick(); }
+      if (_isDataImg(c.photoSpec)) { c.photoSpec = await move(c.photoSpec, "catalog/testcodes/" + c.id + "_photoSpec.jpg"); tick(); }
+    }
+    // propagate migrated library URLs into embedded copies inside items
+    items.forEach((it) => {
+      (it.fixtures || []).forEach((f) => { if (parts[f.key]) f.image = parts[f.key].image; });
+      (it.equipment || []).forEach((f) => { if (equipment[f.key]) f.image = equipment[f.key].image || ""; });
+    });
+    save(KEYS.items, items); save(KEYS.parts, parts); save(KEYS.equipment, equipment); save(KEYS.testcodes, testcodes);
+    emit();
+    return { available: true, scanned, moved, failed };
+  }
+
   /* ---- equipment library (EQUIPMENT) — vendor stock-take needs the MAX qty
      across tests (shared), not the sum (see equipment.jsx buildEquipUsage) ---- */
   const equipment_list = () => Object.keys(equipment).map((key) => Object.assign({ key }, equipment[key]));
@@ -649,6 +689,9 @@
   function stepphoto_set(vendorId, itemId, stepIndex, dataUri) {
     if (!vendorId) return;
     const map = stepphoto_mapFor(vendorId);
+    const prev = map[stepphoto_key(itemId, stepIndex)];
+    // replacing an uploaded photo: drop the old Storage object (best-effort)
+    if (prev && prev !== dataUri && typeof prev === "string" && /^https?:/.test(prev) && window.bffDeleteStorage) window.bffDeleteStorage(prev);
     map[stepphoto_key(itemId, stepIndex)] = dataUri;
     _stepPersist(vendorId, map);
     window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
@@ -656,6 +699,8 @@
   function stepphoto_remove(vendorId, itemId, stepIndex) {
     if (!vendorId) return;
     const map = stepphoto_mapFor(vendorId);
+    const prev = map[stepphoto_key(itemId, stepIndex)];
+    if (prev && typeof prev === "string" && /^https?:/.test(prev) && window.bffDeleteStorage) window.bffDeleteStorage(prev);
     delete map[stepphoto_key(itemId, stepIndex)];
     _stepPersist(vendorId, map);
     window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
@@ -804,13 +849,16 @@
     items_list, items_get, items_save, items_delete,
     vendors_list, vendors_save, vendors_delete, nextVendorId, slugId,
     parts_list, parts_get, parts_save, parts_delete,
-    equipment_list, equipment_get, equipment_save, equipment_delete, compactImages,
+    equipment_list, equipment_get, equipment_save, equipment_delete, compactImages, migrateImagesToStorage,
     testcodes_list, testcodes_get, testcodes_save, testcodes_delete, blankTestcode, newTestcodeKey, testcodes_forVendor, testcodes_itemIdsForVendor, nextTestcodeCode,
     bikecats_list, bikecats_add, bikecats_remove,
     exportSnapshot, importSnapshot, hydrate, isApplyingRemote, snapshotData,
     admincode_get, admincode_set,
     log_list, addLog, resetAll,
     stepphoto_get, stepphoto_set, stepphoto_remove, stepphoto_forVendor, stepphoto_allSubmissions,
+    // cloud-sync accessors: read/write the IDB-backed step-photo map for a vendor
+    stepphoto_mapForVendor: (vid) => stepphoto_mapFor(vid),
+    stepphoto_putMap: (vid, map) => { if (vid) _stepPersist(vid, map || {}); },
   };
 
   /* ---- async boot: prefer IndexedDB; migrate any legacy localStorage data ---- */

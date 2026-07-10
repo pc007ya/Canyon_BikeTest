@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── 管理員 email（大小寫不拘）。要換人或多位管理員就加進這個清單。 ──
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+             'pc007ya@gmail.com'
+           ];
+    }
+    // 任何已登入者（含供應商的匿名連線）
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // 主資料：所有登入者可讀，只有管理員可寫
+    // （大型資料會自動分割成 bff/data、bff/data_0、bff/data_1… 多份文件，
+    //   因此規則需涵蓋整個 bff 集合，而非只有 bff/data。）
+    match /bff/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // 供應商盤點（每個 vendorId 一份）
+    //   讀：管理員可讀全部；供應商可讀自己的
+    //   寫：管理員可寫全部；供應商可寫自己的
+    match /bff_stock/{vendorId} {
+      allow read, write: if isAdmin() || signedIn();
+    }
+
+    // 供應商 annotate 反饋
+    match /bff_report/{vendorId} {
+      allow read, write: if isAdmin() || signedIn();
+    }
+
+    // 供應商登入紀錄 / IP
+    match /bff_loginlog/{vendorId} {
+      allow read, write: if isAdmin() || signedIn();
+    }
+
+    // 供應商步驟照片
+    match /bff_stepphoto/{vendorId} {
+      allow read, write: if isAdmin() || signedIn();
+    }
+
+    // 其餘一律拒絕
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

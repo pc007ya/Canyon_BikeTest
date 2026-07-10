@@ -172,7 +172,8 @@ function StepImage({ itemId, stepIndex, official, vendor, isAdmin, t, onZoom, al
   function load(file) {
     if (!file || !vendorId) return;
     setBusy(true); setErr("");
-    window.bffResizeImage(file, 1280, 0.72)
+    const path = "vendors/" + vendorId + "/steps/" + itemId + "_" + stepIndex + ".jpg";
+    window.bffUploadImage(file, 1280, 0.72, path)
       .then((src) => { window.STORE.stepphoto_set(vendorId, itemId, stepIndex, src); setMine(src); setBusy(false); })
       .catch(() => { setBusy(false); setErr(t("uploadFailed")); });
   }

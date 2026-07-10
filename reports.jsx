@@ -61,6 +61,12 @@ function saveReports(vendorId, obj) {
     window.dispatchEvent(new CustomEvent("bff:reportchange"));
   } catch (e) {}
 })();
+
+/* Accessors for cloud.js so report sync reads/writes the IDB-backed source
+   (not the now-emptied localStorage). Upload reads bffReportGet; a remote pull
+   applies via bffReportPut (persists to cache + IDB). */
+window.bffReportGet = function (vendorId) { return loadReports(vendorId); };
+window.bffReportPut = function (vendorId, map) { saveReports(vendorId, map || {}); };
 function getReport(vendorId, testId) { return loadReports(vendorId)[testId]; }
 function setReport(vendorId, testId, report) {
   const all = loadReports(vendorId);
@@ -129,7 +135,10 @@ function ReportPanel({ item, lang, t, vendor, admin, onZoom }) {
     const next = photos.slice();
     let failed = 0;
     for (const f of files.slice(0, room)) {
-      try { next.push(await window.bffResizeImage(f, 1280, 0.7)); }
+      try {
+        const path = "vendors/" + (vid || "anon") + "/reports/" + item.id + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7) + ".jpg";
+        next.push(await window.bffUploadImage(f, 1280, 0.7, path));
+      }
       catch (e) { failed++; }
     }
     setPhotos(next); setBusy(false); dirty();
@@ -139,7 +148,13 @@ function ReportPanel({ item, lang, t, vendor, admin, onZoom }) {
         : `${failed} photo(s) failed to upload (not an image, or over 20MB)`);
     }
   }
-  function removePhoto(i) { setPhotos(photos.filter((_, j) => j !== i)); dirty(); }
+  function removePhoto(i) {
+    const gone = photos[i];
+    // clean up the orphaned Storage object (only for uploaded https URLs;
+    // data-URIs live inline and need no cleanup). Best-effort, non-blocking.
+    if (typeof gone === "string" && /^https?:/.test(gone) && window.bffDeleteStorage) { window.bffDeleteStorage(gone); }
+    setPhotos(photos.filter((_, j) => j !== i)); dirty();
+  }
 
   function submit() {
     const report = {

@@ -55,11 +55,16 @@ function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve
     const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
     const authMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
     const fsMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    let stMod = null;
+    try { stMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"); } catch (e) { stMod = null; }
 
     const app = appMod.initializeApp(cfg);
     const auth = authMod.getAuth(app);
     const db = fsMod.getFirestore(app);
-    _api = { app, auth, db, authMod, fsMod };
+    _api = { app, auth, db, authMod, fsMod, stMod };
+    // Expose a Storage handle for storage.js (bffUploadImage). Absent =>
+    // uploads fall back to inline data-URIs (offline / storage unavailable).
+    if (stMod) { try { CLOUD.storage = stMod.getStorage(app); CLOUD.stMod = stMod; } catch (e) { CLOUD.storage = null; } }
 
     const provider = new authMod.GoogleAuthProvider();
     _signInImpl = () => authMod.signInWithPopup(auth, provider).catch((e) => setStatus("error", e.message));
@@ -238,14 +243,14 @@ function startSync() {
     _unsubReport = fsMod.onSnapshot(fsMod.collection(db, "bff_report"), (qs) => {
       qs.docChanges().forEach((ch) => {
         if (ch.doc.metadata.hasPendingWrites) return;
-        try { localStorage.setItem("bff:report:" + ch.doc.id, JSON.stringify(ch.doc.data())); } catch (e) {}
+        try { window.bffReportPut(ch.doc.id, ch.doc.data()); } catch (e) {}
       });
       window.dispatchEvent(new CustomEvent("bff:reportchange"));
     }, (e) => setStatus("error", e.message));
   } else if (me) {
     _unsubReport = fsMod.onSnapshot(fsMod.doc(db, "bff_report", me.id), (snap) => {
       if (snap.metadata.hasPendingWrites) return;
-      if (snap.exists()) { try { localStorage.setItem("bff:report:" + me.id, JSON.stringify(snap.data())); } catch (e) {} }
+      if (snap.exists()) { try { window.bffReportPut(me.id, snap.data()); } catch (e) {} }
       window.dispatchEvent(new CustomEvent("bff:reportchange"));
     }, (e) => setStatus("error", e.message));
   }
@@ -269,14 +274,14 @@ function startSync() {
     _unsubStepPhoto = fsMod.onSnapshot(fsMod.collection(db, "bff_stepphoto"), (qs) => {
       qs.docChanges().forEach((ch) => {
         if (ch.doc.metadata.hasPendingWrites) return;
-        try { localStorage.setItem("bff:stepphoto:" + ch.doc.id, JSON.stringify(ch.doc.data())); } catch (e) {}
+        try { window.STORE.stepphoto_putMap(ch.doc.id, ch.doc.data()); } catch (e) {}
       });
       window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
     }, (e) => setStatus("error", e.message));
   } else if (me) {
     _unsubStepPhoto = fsMod.onSnapshot(fsMod.doc(db, "bff_stepphoto", me.id), (snap) => {
       if (snap.metadata.hasPendingWrites) return;
-      if (snap.exists()) { try { localStorage.setItem("bff:stepphoto:" + me.id, JSON.stringify(snap.data())); } catch (e) {} }
+      if (snap.exists()) { try { window.STORE.stepphoto_putMap(me.id, snap.data()); } catch (e) {} }
       window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
     }, (e) => setStatus("error", e.message));
   }
@@ -345,7 +350,7 @@ function onLocalReport() {
   if (!u || u.role === "admin") return; // only vendors write their own reports
   const { db, fsMod } = _api;
   let map = {};
-  try { map = JSON.parse(localStorage.getItem("bff:report:" + u.id) || "{}"); } catch (e) {}
+  try { map = (window.bffReportGet && window.bffReportGet(u.id)) || JSON.parse(localStorage.getItem("bff:report:" + u.id) || "{}"); } catch (e) {}
   fsMod.setDoc(fsMod.doc(db, "bff_report", u.id), map).catch((e) => setStatus("error", e.message));
 }
 function onLocalLoginLog() {
@@ -362,6 +367,6 @@ function onLocalStepPhoto() {
   if (!u || u.role === "admin") return; // only vendors write their own comparison photos
   const { db, fsMod } = _api;
   let map = {};
-  try { map = JSON.parse(localStorage.getItem("bff:stepphoto:" + u.id) || "{}"); } catch (e) {}
+  try { map = (window.STORE.stepphoto_mapForVendor && window.STORE.stepphoto_mapForVendor(u.id)) || JSON.parse(localStorage.getItem("bff:stepphoto:" + u.id) || "{}"); } catch (e) {}
   fsMod.setDoc(fsMod.doc(db, "bff_stepphoto", u.id), map).catch((e) => setStatus("error", e.message));
 }
