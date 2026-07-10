@@ -558,9 +558,6 @@ function App() {
           </span>
         </button>
         <nav className="topnav" aria-label="sections">
-          <button className={"topnav-btn" + (route.name === "list" || route.name === "detail" ? " on" : "")} onClick={goTests}>
-            <Icon name="grid" size={15} />{lang === "zh" ? "測試項目" : "Tests"}
-          </button>
           {!admin && window.STORE.testcodes_forVendor(vendor.id).length > 0 &&
           <button className={"topnav-btn" + (route.name === "projects" ? " on" : "")} onClick={goProjects}>
               <Icon name="grid" size={15} />{lang === "zh" ? "目前專案" : "Current projects"}
@@ -571,6 +568,9 @@ function App() {
             <Icon name="grid" size={15} />{lang === "zh" ? "產品代號" : "Product codes"}
           </button>
           }
+          <button className={"topnav-btn" + (route.name === "list" || route.name === "detail" ? " on" : "")} onClick={goTests}>
+            <Icon name="grid" size={15} />{lang === "zh" ? "測試項目" : "Tests"}
+          </button>
           <button className={"topnav-btn" + (onFixturesArea ? " on" : "")} onClick={goFixtures}>
             <Icon name="cube" size={15} />{lang === "zh" ? "制具總覽" : "Fixtures"}
           </button>
