@@ -5,14 +5,62 @@
    Photos are downscaled to keep each vendor doc within Firestore's ~1MB limit. */
 const { useState: rpState, useEffect: rpEffect, useRef: rpRef } = React;
 
-/* ---- storage (per vendor, persisted; mirrors the stock pattern) ---- */
+/* ---- storage (per vendor, persisted) ----
+   Reports carry photos (base64 data-URIs) which quickly blow past
+   localStorage's ~5MB per-origin cap → QuotaExceededError → "空間不足".
+   So we store in IndexedDB (window.KV, hundreds of MB) exactly like the main
+   store: an in-memory cache serves synchronous reads (render), writes go
+   through to IDB, and legacy localStorage docs are migrated on boot. */
 function reportKeyFor(vendorId) { return "bff:report:" + (vendorId || "anon"); }
+const _rptCache = {};              // vendorId -> report map (authoritative in memory)
+const _rptUseIDB = !!(window.KV && window.KV.available);
+function _rptLoadLS(vid) {
+  try { return JSON.parse(localStorage.getItem(reportKeyFor(vid)) || "{}"); } catch (e) { return {}; }
+}
+function _rptSaveLS(vid, obj) {
+  try { localStorage.setItem(reportKeyFor(vid), JSON.stringify(obj)); }
+  catch (e) { try { window.dispatchEvent(new CustomEvent("bff:saveerror", { detail: { key: reportKeyFor(vid), error: String(e && e.name || e) } })); } catch (e2) {} }
+}
 function loadReports(vendorId) {
-  try { return JSON.parse(localStorage.getItem(reportKeyFor(vendorId)) || "{}"); } catch (e) { return {}; }
+  const vid = vendorId || "anon";
+  if (_rptCache[vid]) return _rptCache[vid];
+  const v = _rptLoadLS(vid);       // sync fallback until IDB hydrates
+  _rptCache[vid] = v;
+  return v;
 }
 function saveReports(vendorId, obj) {
-  try { localStorage.setItem(reportKeyFor(vendorId), JSON.stringify(obj)); } catch (e) {}
+  const vid = vendorId || "anon";
+  _rptCache[vid] = obj;
+  if (_rptUseIDB) {
+    window.KV.set(reportKeyFor(vid), obj).catch(() => _rptSaveLS(vid, obj));
+    try { localStorage.removeItem(reportKeyFor(vid)); } catch (e) {}
+  } else { _rptSaveLS(vid, obj); }
 }
+/* async: hydrate every vendor's reports from IDB (authoritative) and migrate
+   any legacy localStorage report docs into IDB, then refresh the UI. */
+(async function hydrateReports() {
+  if (!_rptUseIDB) return;
+  try {
+    const ks = (window.KV.keys ? await window.KV.keys() : []) || [];
+    for (const k of ks) {
+      if (k.indexOf("bff:report:") === 0) {
+        const v = await window.KV.get(k);
+        if (v) _rptCache[k.slice("bff:report:".length)] = v;
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {   // migrate legacy LS → IDB
+      const k = localStorage.key(i);
+      if (k && k.indexOf("bff:report:") === 0) {
+        const vid = k.slice("bff:report:".length);
+        if (!_rptCache[vid]) {
+          const v = _rptLoadLS(vid);
+          if (v && Object.keys(v).length) { _rptCache[vid] = v; window.KV.set(k, v).catch(() => {}); }
+        }
+      }
+    }
+    window.dispatchEvent(new CustomEvent("bff:reportchange"));
+  } catch (e) {}
+})();
 function getReport(vendorId, testId) { return loadReports(vendorId)[testId]; }
 function setReport(vendorId, testId, report) {
   const all = loadReports(vendorId);

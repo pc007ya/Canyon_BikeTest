@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="zh-Hant" data-lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>供應商流程指引 · 麥當勞版 (DEMO 中英)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+<link href="guide-v2.css" rel="stylesheet" />
+<style>
+  /* McDonald's demo accents (kept subtle; reuses guide-v2.css) */
+  .ing{ display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 18px; }
+  .ing .ic{ width:46px;height:46px;flex:none;border-radius:8px;display:grid;place-items:center;background:var(--warn-soft);color:var(--warn);font-weight:700;font-family:var(--mono);font-size:16px; }
+  .ing .inm{ font-size:20px;font-weight:600;line-height:1.2; }
+  .ing .icd{ font-family:var(--mono);font-size:14px;color:var(--ink-3);margin-top:2px; }
+  .ing .iqty{ margin-left:auto;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink); }
+  .cook{ display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+  .cook .ck{ display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px; }
+  .cook .ck .cn{ font-family:var(--mono);font-size:15px;font-weight:700;color:#fff;background:var(--accent);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none; }
+  .cook .ck .ctt{ font-size:18px;font-weight:700;line-height:1.2; }
+  .cook .ck .cdd{ font-size:14px;color:var(--ink-2);line-height:1.32;margin-top:3px; }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#152232"/>
+  <g fill="none" stroke="#f4b63f" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 40a26 26 0 0 1 52 0"/><rect x="20" y="46" width="60" height="8" rx="4"/>
+    <path d="M22 60h56M26 68h48"/>
+  </g>
+</svg>
+</template>
+
+<div class="langbar no-print" role="group" aria-label="language">
+  <button id="lang-zh" class="on" onclick="setGuideLang('zh')">中文</button>
+  <button id="lang-en" onclick="setGuideLang('en')">EN</button>
+</div>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- 1 · COVER -->
+  <section class="slide dark" data-label="封面 Cover">
+    <div style="margin:auto 0;">
+      <div class="cover-badge anim" style="color:#f4b63f;border-color:rgba(244,182,63,.5);"><span class="zh">DEMO 教學版 · 大麥克示範</span><span class="en">DEMO tutorial · Big Mac demo</span></div>
+      <h1 class="cover-h anim" style="animation-delay:.08s"><span class="zh">供應商流程指引</span><span class="en">Supplier Guide</span></h1>
+      <div class="cover-sub anim" style="animation-delay:.16s"><span class="zh">用不涉及機密的 <b>大麥克</b> 示範，完整走一遍系統的每個功能</span><span class="en">A full, non-confidential walk-through using the <b>Big Mac</b> demo</span></div>
+      <div class="cover-meta anim" style="animation-delay:.26s">
+        <div class="cm"><span class="k"><span class="zh">帳號</span><span class="en">Account</span></span><span class="v mono">DEMO</span></div>
+        <div class="cm"><span class="k"><span class="zh">示範產品</span><span class="en">Product</span></span><span class="v"><span class="zh">BigMac 大麥克</span><span class="en">BigMac</span></span></div>
+        <div class="cm"><span class="k"><span class="zh">範例測試</span><span class="en">Example</span></span><span class="v mono">MAC1</span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">教學示範 · 與真實產品資料無關</span><span class="en">Training demo · not real product data</span></div>
+    <div class="pno">01</div>
+  </section>
+
+  <!-- 2 · OVERVIEW -->
+  <section class="slide grid" data-label="流程總覽 Overview">
+    <div class="kick anim"><span class="dot"></span><span class="zh">整體流程 · 十個步驟</span><span class="en">The journey · ten steps</span></div>
+    <h2 class="stitle anim" style="font-size:54px; margin:20px 0 0; animation-delay:.05s"><span class="zh">供應商完整流程一覽（大麥克示範）</span><span class="en">The complete supplier flow (Big Mac demo)</span></h2>
+    <div class="fcwrap">
+      <div class="fcrow">
+        <div class="fnode anim pop" style="animation-delay:.12s"><span class="fn-n">1</span><span class="fn-t"><span class="zh">登入</span><span class="en">Log in</span></span><span class="fn-d"><span class="zh">選 DEMO、輸入密碼</span><span class="en">Pick DEMO, enter code</span></span></div>
+        <div class="farrow anim" style="animation-delay:.2s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.24s"><span class="fn-n">2</span><span class="fn-t"><span class="zh">目前專案</span><span class="en">Projects</span></span><span class="fn-d"><span class="zh">看到 BigMac 案子</span><span class="en">See the BigMac job</span></span></div>
+        <div class="farrow anim" style="animation-delay:.32s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.36s"><span class="fn-n">3</span><span class="fn-t"><span class="zh">食材與廚具</span><span class="en">Ingredients &amp; tools</span></span><span class="fn-d"><span class="zh">制具＝食材、設備＝廚具</span><span class="en">Fixtures=food, equip=tools</span></span></div>
+        <div class="farrow anim" style="animation-delay:.44s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.48s"><span class="fn-n">4</span><span class="fn-t"><span class="zh">製作＋對比照</span><span class="en">Cook + photo</span></span><span class="fn-d"><span class="zh">上傳實拍對比官圖</span><span class="en">Upload vs official</span></span></div>
+        <div class="farrow anim" style="animation-delay:.56s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.6s"><span class="fn-n">5</span><span class="fn-t"><span class="zh">標準＋報告</span><span class="en">Criteria + report</span></span><span class="fn-d"><span class="zh">填結果並提交</span><span class="en">Fill &amp; submit</span></span></div>
+      </div>
+      <div class="fcrow">
+        <div class="fnode anim pop" style="animation-delay:.66s"><span class="fn-n">6</span><span class="fn-t"><span class="zh">食材查詢</span><span class="en">Food lookup</span></span><span class="fn-d"><span class="zh">制具總覽反查</span><span class="en">Fixture overview</span></span></div>
+        <div class="farrow anim" style="animation-delay:.74s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.78s"><span class="fn-n">7</span><span class="fn-t"><span class="zh">廚具查詢</span><span class="en">Tool lookup</span></span><span class="fn-d"><span class="zh">設備清單反查</span><span class="en">Equipment list</span></span></div>
+        <div class="farrow anim" style="animation-delay:.86s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.9s"><span class="fn-n">8</span><span class="fn-t"><span class="zh">食材盤點</span><span class="en">Food stock</span></span><span class="fn-d"><span class="zh">數量提交（累加）</span><span class="en">Submit (sum)</span></span></div>
+        <div class="farrow anim" style="animation-delay:.98s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:1.02s"><span class="fn-n">9</span><span class="fn-t"><span class="zh">廚具盤點</span><span class="en">Tool count</span></span><span class="fn-d"><span class="zh">數量提交（取最高）</span><span class="en">Submit (max)</span></span></div>
+        <div class="farrow anim" style="animation-delay:1.1s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:1.14s"><span class="fn-n">10</span><span class="fn-t"><span class="zh">變更通知</span><span class="en">Change alerts</span></span><span class="fn-d"><span class="zh">鈴鐺與粉紅提示</span><span class="en">Bell &amp; pink cues</span></span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">流程總覽</span><span class="en">Overview</span></div>
+    <div class="pno">02</div>
+  </section>
+
+  <!-- 3 · STEP 1 LOGIN -->
+  <section class="slide grid" data-label="步驟一 登入">
+    <div class="rail anim">
+      <div class="rstep cur"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">03</span><span class="rt"><span class="zh">食材廚具</span><span class="en">Food/tools</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">04–05</span><span class="rt"><span class="zh">製作報告</span><span class="en">Cook</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div class="body">
+      <div class="col" style="justify-content:center; flex:1.1;">
+        <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 01</span><span class="en">Step 01</span></span>
+        <h2 class="biglead anim" style="margin-top:16px; animation-delay:.1s"><span class="zh">選定廠商並輸入密碼</span><span class="en">Pick your company &amp; enter the code</span></h2>
+        <p class="lead anim" style="animation-delay:.16s"><span class="zh">登入頁選 <b>「供應商」</b> 分頁，點 <b>DEMO</b>，輸入存取碼 <b>DEMO</b>，按「登入系統」。資料依帳號分開儲存並即時同步。</span><span class="en">On the login page pick the <b>Supplier</b> tab, choose <b>DEMO</b>, enter the code <b>DEMO</b>, press "Log in". Data is stored per account and synced live.</span></p>
+        <div class="note anim" style="animation-delay:.24s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="zh">這是公開的教學帳號；正式供應商帳號的存取碼由品管部另行提供。</span><span class="en">This is a public training account; real supplier codes are issued separately by QC.</span>
+        </div>
+      </div>
+      <div class="col anim" style="animation-delay:.2s; justify-content:center;">
+        <div class="card" style="padding:38px 42px;">
+          <div class="kick" style="font-size:15px;"><span class="dot"></span><span class="zh">供應商登入</span><span class="en">Supplier login</span></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:24px 0 20px;">
+            <div style="border:1.5px solid var(--line); border-radius:5px; padding:14px 16px; display:flex; align-items:center; gap:12px;"><span style="width:32px;height:32px;border-radius:50%;background:var(--surface-2);color:var(--ink-3);display:grid;place-items:center;font-weight:700;">巨</span><span style="font-size:19px;font-weight:600;color:var(--ink-2);"><span class="zh">巨大機械</span><span class="en">Giant</span></span></div>
+            <div style="border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:5px; padding:14px 16px; display:flex; align-items:center; gap:12px;"><span style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;">D</span><span style="font-size:19px;font-weight:600;">DEMO</span></div>
+          </div>
+          <div class="kick" style="font-size:14px; margin-bottom:10px;"><span class="zh">存取碼</span><span class="en">Access code</span></div>
+          <div class="mono" style="border:1.5px solid var(--accent); border-radius:5px; padding:14px 16px; font-size:22px; letter-spacing:.3em; color:var(--ink);">DEMO</div>
+          <div style="margin-top:20px; background:var(--accent); color:#fff; border-radius:5px; padding:15px; text-align:center; font-size:21px; font-weight:600;"><span class="zh">登入系統</span><span class="en">Log in</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">登入</span><span class="en">Login</span></div>
+    <div class="pno">03</div>
+  </section>
+
+  <!-- 4 · STEP 2 CURRENT PROJECTS -->
+  <section class="slide grid" data-label="步驟二 目前專案">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">03</span><span class="rt"><span class="zh">食材廚具</span><span class="en">Food/tools</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">04–05</span><span class="rt"><span class="zh">製作報告</span><span class="en">Cook</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:6px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 02</span><span class="en">Step 02</span></span>
+      <h2 class="stitle anim" style="font-size:46px; margin:0; animation-delay:.1s"><span class="zh">點左上「目前專案」看到分配的 BigMac</span><span class="en">Open "Current projects" — see the assigned BigMac</span></h2>
+    </div>
+    <p class="lead anim" style="animation-delay:.14s; margin:14px 0 26px;"><span class="zh">DEMO 只被分配到 <b>BigMac</b> 這個產品代號，涵蓋 <b>1</b> 項測試（MAC1 大麥克）。沒被分配的產品、食材與廚具都不會顯示。</span><span class="en">DEMO is assigned only the <b>BigMac</b> product code, covering <b>1</b> test (MAC1). Anything not assigned to DEMO — products, food, tools — stays hidden.</span></p>
+    <div class="body" style="gap:36px;">
+      <div class="col" style="flex:1.1;">
+        <div class="projgrid" style="grid-template-columns:1fr;">
+          <div class="projc anim" style="animation-delay:.2s">
+            <div class="ph"><span class="pcode">Others-01</span><span class="pname">BigMac <span class="zh">大麥克</span></span><span class="tag" style="margin-left:auto;">Others</span></div>
+            <div class="pb">
+              <div class="prow"><span><span class="zh">涵蓋測試</span><span class="en">Covered tests</span></span><b>MAC1 · 大麥克</b></div>
+              <div class="prow"><span><span class="zh">參數（點代號展開）</span><span class="en">Param (tap code)</span></span><b class="mono">BicMac 8.88 US</b></div>
+              <div class="prow"><span><span class="zh">產品圖／規格圖</span><span class="en">Product / spec photo</span></span><b><span class="zh">可切換</span><span class="en">toggle</span></b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:.9; animation-delay:.24s;">
+        <div class="kick" style="font-size:15px; margin-bottom:14px;"><span class="dot"></span><span class="zh">頁面可用功能</span><span class="en">What you can do here</span></div>
+        <div class="feat">
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><div><div class="ft"><span class="zh">測試項目</span><span class="en">Tests</span></div><div class="fd"><span class="zh">點 MAC1 看做法</span><span class="en">Open MAC1</span></div></div></div>
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span><div><div class="ft"><span class="zh">食材總覽</span><span class="en">Ingredients</span></div><div class="fd"><span class="zh">反查食材用量</span><span class="en">Reverse lookup</span></div></div></div>
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span><div><div class="ft"><span class="zh">盤點</span><span class="en">Stock-take</span></div><div class="fd"><span class="zh">食材與廚具盤點</span><span class="en">Food &amp; tools</span></div></div></div>
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><div><div class="ft"><span class="zh">變更通知</span><span class="en">Alerts</span></div><div class="fd"><span class="zh">鈴鐺看更新</span><span class="en">Bell for updates</span></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">目前專案</span><span class="en">Current projects</span></div>
+    <div class="pno">04</div>
+  </section>
+
+  <!-- 5 · STEP 3 INGREDIENTS + TOOLS -->
+  <section class="slide grid" data-label="步驟三 食材廚具">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">03</span><span class="rt"><span class="zh">食材廚具</span><span class="en">Food/tools</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">04–05</span><span class="rt"><span class="zh">製作報告</span><span class="en">Cook</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 03</span><span class="en">Step 03</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">點 MAC1，確認「食材」與「廚具」</span><span class="en">Open MAC1 — confirm ingredients &amp; tools</span></h2>
+      <span class="mono anim" style="animation-delay:.14s; color:var(--ink-3); font-size:20px; margin-left:auto;"><span class="zh">煎台 250℃</span><span class="en">Griddle 250℃</span></span>
+    </div>
+    <div class="body" style="margin-top:24px; gap:36px;">
+      <div class="col" style="flex:1.25;">
+        <div class="kick anim" style="font-size:15px; margin-bottom:12px; animation-delay:.16s"><span class="dot"></span><span class="zh">所需制具（＝食材）· 6 項</span><span class="en">Fixtures (＝ingredients) · 6</span></div>
+        <div class="tiles" style="grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="ing anim" style="animation-delay:.2s"><span class="ic">Mc1</span><span><span class="inm"><span class="zh">芝麻麵包</span><span class="en">Sesame bun</span></span><span class="icd">Mc1</span></span><span class="iqty">×1 pcs</span></div>
+          <div class="ing anim" style="animation-delay:.24s"><span class="ic">Mc2</span><span><span class="inm"><span class="zh">牛肉排</span><span class="en">Beef pattie</span></span><span class="icd">Mc2</span></span><span class="iqty">×1 pcs</span></div>
+          <div class="ing anim" style="animation-delay:.28s"><span class="ic">Mc3</span><span><span class="inm"><span class="zh">清脆生菜絲</span><span class="en">Shredded lettuce</span></span><span class="icd">Mc3</span></span><span class="iqty">×1 set</span></div>
+          <div class="ing anim" style="animation-delay:.32s"><span class="ic">Mc4</span><span><span class="inm"><span class="zh">酸黃瓜片</span><span class="en">Pickle slices</span></span><span class="icd">Mc4</span></span><span class="iqty">×1 set</span></div>
+          <div class="ing anim" style="animation-delay:.36s"><span class="ic">Mc5</span><span><span class="inm"><span class="zh">切達起司片</span><span class="en">Cheddar slice</span></span><span class="icd">Mc5</span></span><span class="iqty">×2 slice</span></div>
+          <div class="ing anim" style="animation-delay:.4s"><span class="ic">Mc6</span><span><span class="inm"><span class="zh">番茄</span><span class="en">Tomato</span></span><span class="icd">Mc6</span></span><span class="iqty">×2 slice</span></div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:.9; animation-delay:.3s;">
+        <div class="kick" style="font-size:15px; margin-bottom:12px;"><span class="dot"></span><span class="zh">所需設備（＝廚具）· 可共用</span><span class="en">Equipment (＝tools) · shared</span></div>
+        <div class="eqgrid" style="grid-template-columns:1fr;">
+          <div class="eqtile"><span class="eqi"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="6" y1="17" x2="6" y2="21"/><line x1="18" y1="17" x2="18" y2="21"/></svg></span><div><div class="eqn"><span class="zh">煎台</span><span class="en">Griddle</span></div><div class="eqc">McA · ×1</div></div></div>
+          <div class="eqtile act"><span class="eqi"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h11v3a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><line x1="14" y1="12" x2="21" y2="5"/></svg></span><div><div class="eqn"><span class="zh">漢堡煎鏟</span><span class="en">Spatula</span></div><div class="eqc">McB · ×1</div></div></div>
+          <div class="eqtile ins"><span class="eqi"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="10" y2="15"/></svg></span><div><div class="eqn"><span class="zh">麵包烘烤機</span><span class="en">Bun toaster</span></div><div class="eqc">McC · ×1</div></div></div>
+        </div>
+        <div class="note" style="margin-top:16px; font-size:19px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span class="zh">食材<b>用掉就要補</b>（累加）；廚具<b>可共用</b>（取最高）。</span><span class="en">Food is <b>consumed</b> (sum); tools are <b>shared</b> (max).</span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">食材與廚具</span><span class="en">Ingredients &amp; tools</span></div>
+    <div class="pno">05</div>
+  </section>
+
+  <!-- 6 · STEP 4 COOK STEPS + PHOTO COMPARE -->
+  <section class="slide grid" data-label="步驟四 製作對比">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">03</span><span class="rt"><span class="zh">食材廚具</span><span class="en">Food/tools</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">04</span><span class="rt"><span class="zh">製作</span><span class="en">Cook</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">05</span><span class="rt"><span class="zh">報告</span><span class="en">Report</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–10</span><span class="rt"><span class="zh">查詢通知</span><span class="en">More</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:16px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 04</span><span class="en">Step 04</span></span>
+      <h2 class="stitle anim" style="font-size:42px; margin:0; animation-delay:.1s"><span class="zh">照 7 個步驟製作，上傳實拍對比官方成品圖</span><span class="en">Follow the 7 steps; upload your photo beside the official one</span></h2>
+    </div>
+    <div class="body" style="gap:30px;">
+      <div class="col" style="flex:1.12;">
+        <div class="cook">
+          <div class="ck anim" style="animation-delay:.14s"><span class="cn">1</span><div><div class="ctt"><span class="zh">烘烤麵包</span><span class="en">The Toast</span></div><div class="cdd"><span class="zh">三片麵包切面朝下，烘至金黃酥脆。</span><span class="en">Toast all three buns cut-side down until crisp.</span></div></div></div>
+          <div class="ck anim" style="animation-delay:.19s"><span class="cn">2</span><div><div class="ctt"><span class="zh">醬汁與底層鋪料</span><span class="en">The Foundation</span></div><div class="cdd"><span class="zh">底層＋中層各塗特製醬、洋蔥、生菜、起司／酸黃瓜。</span><span class="en">Sauce, onion, lettuce, cheese/pickles on both buns.</span></div></div></div>
+          <div class="ck anim" style="animation-delay:.24s"><span class="cn">3</span><div><div class="ctt"><span class="zh">高溫煎製牛肉排</span><span class="en">The Sear</span></div><div class="cdd"><span class="zh">大火壓煎 10 秒鎖汁，兩面各煎約 1 分鐘。</span><span class="en">Press-sear 10s, ~1 min per side.</span></div></div></div>
+          <div class="ck anim" style="animation-delay:.29s"><span class="cn">4</span><div><div class="ctt"><span class="zh">黃金交疊組裝 I</span><span class="en">Building Up I</span></div><div class="cdd"><span class="zh">兩片肉排分別放上底層與中層生菜。</span><span class="en">Place each patty on its lettuce layer.</span></div></div></div>
+          <div class="ck anim" style="animation-delay:.34s"><span class="cn">5</span><div><div class="ctt"><span class="zh">黃金交疊組裝 II</span><span class="en">Building Up II</span></div><div class="cdd"><span class="zh">中層疊上底層，蓋上頂層芝麻麵包，完成七層。</span><span class="en">Stack middle on bottom, crown with sesame bun.</span></div></div></div>
+          <div class="ck anim" style="animation-delay:.39s"><span class="cn">6</span><div><div class="ctt"><span class="zh">包裝檢驗</span><span class="en">Quality Check</span></div><div class="cdd"><span class="zh">裝盒後檢查筆直、七層分明、無外溢。</span><span class="en">Boxed: upright, 7 layers, no spillover.</span></div></div></div>
+          <div class="ck anim" style="animation-delay:.44s; grid-column:1 / -1;"><span class="cn">7</span><div><div class="ctt"><span class="zh">封盒出餐</span><span class="en">Clamshell for Serving</span></div><div class="cdd"><span class="zh">雙手扣緊掀蓋盒，鎖住熱氣與風味，出餐。</span><span class="en">Snap-lock the clamshell to trap steam &amp; flavor, then serve.</span></div></div></div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:.9; animation-delay:.24s;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:1; min-height:0;">
+          <div style="display:flex; flex-direction:column;">
+            <div class="schem" style="flex:1;">
+              <span class="frame-lbl"><span class="zh">官方成品圖</span><span class="en">Official</span></span>
+              <div class="photo-ph" style="width:100%;height:100%;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span class="ph-t"><span class="zh">大麥克水彩圖</span><span class="en">Big Mac art</span></span><span class="ph-s"><span class="zh">（系統內建 · 匯出照片後放入）</span><span class="en">(built-in · from export)</span></span></div>
+            </div>
+            <div class="figcap"><span class="zh">系統內建 · 官方標準</span><span class="en">Built-in · standard</span></div>
+          </div>
+          <div style="display:flex; flex-direction:column;">
+            <div class="schem" style="flex:1;">
+              <span class="frame-lbl sup"><span class="zh">DEMO 實拍</span><span class="en">DEMO photo</span></span>
+              <div class="photo-ph" style="width:100%;height:100%;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="ph-t"><span class="zh">供應商上傳照片</span><span class="en">Supplier upload</span></span><span class="ph-s"><span class="zh">（你的成品實拍）</span><span class="en">(your result)</span></span></div>
+            </div>
+            <div class="figcap"><span class="zh">你的實拍 · 並排對比</span><span class="en">Your photo · compare</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note pink anim" style="animation-delay:.5s; margin-top:16px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span class="zh">你的實拍<b>不會覆蓋官方圖</b>——並排顯示，且各供應商只看得到自己的版本。</span><span class="en">Your photo <b>never replaces the official one</b> — side-by-side, and each supplier sees only their own.</span></div>
+    <div class="ribbon"><span class="zh">製作步驟 · 對比照片</span><span class="en">Cook · photo compare</span></div>
+    <div class="pno">06</div>
+  </section>
+
+  <!-- 7 · STEP 5 PASS + REPORT -->
+  <section class="slide grid" data-label="步驟五 標準報告">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–03</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">04</span><span class="rt"><span class="zh">製作</span><span class="en">Cook</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">05</span><span class="rt"><span class="zh">報告</span><span class="en">Report</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:18px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 05</span><span class="en">Step 05</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">理解通過標準，填寫報告並提交</span><span class="en">Read the pass criteria, fill the report, submit</span></h2>
+    </div>
+    <div class="body" style="gap:36px;">
+      <div class="col" style="flex:1;">
+        <div class="kick anim" style="font-size:15px; margin-bottom:12px; animation-delay:.14s"><span class="dot"></span><span class="zh">通過標準（成品驗收）</span><span class="en">Pass criteria (final QC)</span></div>
+        <div class="pass">
+          <div class="passc anim" style="animation-delay:.18s"><span class="pc-i"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="pc-t"><span class="zh">漢堡 <b>筆直不傾斜</b>，經典 <b>七層結構</b> 層次分明、飽滿定型。</span><span class="en">The burger stands <b>straight</b>; the iconic <b>7-layer</b> structure is defined and intact.</span></span></div>
+          <div class="passc anim" style="animation-delay:.26s"><span class="pc-i"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="pc-t"><span class="zh">生菜洋蔥整齊收納，起司微融垂墜，<b>盒身乾淨無外溢</b>。</span><span class="en">Lettuce &amp; onion neatly tucked, cheese draped, <b>box clean, no spillover</b>.</span></span></div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:1.1; animation-delay:.24s;">
+        <div class="kick" style="font-size:15px; margin-bottom:12px;"><span class="dot"></span><span class="zh">上傳報告</span><span class="en">Submit report</span></div>
+        <div class="rep" style="grid-template-columns:1fr 1fr;">
+          <div class="repf"><div class="rk"><span class="zh">測試結果</span><span class="en">Result</span></div><div class="toggle"><span class="on-ok"><span class="zh">通過</span><span class="en">Pass</span></span><span class="off"><span class="zh">不通過</span><span class="en">Fail</span></span></div></div>
+          <div class="repf"><div class="rk"><span class="zh">量測數據</span><span class="en">Data</span></div><div class="rv" style="color:var(--ink-2); font-weight:500; font-size:19px;"><span class="zh">煎台 250℃；成品高度符合</span><span class="en">Griddle 250℃; height OK</span></div></div>
+          <div class="repf" style="grid-column:1 / -1;"><div class="rk"><span class="zh">報告照片</span><span class="en">Photos</span></div><div class="rv" style="display:flex; gap:10px; margin-top:14px;"><span style="width:56px;height:56px;border:1px dashed var(--line-strong);border-radius:5px;display:grid;place-items:center;color:var(--ink-3);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span style="width:56px;height:56px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;"></span></div></div>
+        </div>
+        <div style="margin-top:16px; background:var(--accent); color:#fff; border-radius:6px; padding:15px; text-align:center; font-size:21px; font-weight:600;"><span class="zh">提交報告</span><span class="en">Submit report</span></div>
+      </div>
+    </div>
+    <div class="note anim" style="animation-delay:.4s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="zh">送出後管理員即可在「測試結果」看到 DEMO 的回報。</span><span class="en">Once submitted, the admin sees DEMO's report under "Results".</span></div>
+    <div class="ribbon"><span class="zh">通過標準 · 報告</span><span class="en">Criteria · report</span></div>
+    <div class="pno">07</div>
+  </section>
+
+  <!-- 8 · STEP 6 INGREDIENT LOOKUP -->
+  <section class="slide grid" data-label="步驟六 食材查詢">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–05</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">06</span><span class="rt"><span class="zh">食材查詢</span><span class="en">Food lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">07</span><span class="rt"><span class="zh">廚具查詢</span><span class="en">Tool lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">08–09</span><span class="rt"><span class="zh">盤點</span><span class="en">Stock</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div class="body">
+      <div class="col" style="justify-content:center; flex:.9;">
+        <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 06</span><span class="en">Step 06</span></span>
+        <h2 class="biglead anim" style="margin-top:16px; animation-delay:.1s"><span class="zh">食材怎麼查</span><span class="en">How to look up an ingredient</span></h2>
+        <p class="lead anim" style="animation-delay:.16s"><span class="zh">點 <b>「食材總覽」</b>（制具總覽），反查每項食材用在哪些測試、總需求與庫存狀態。需求為各測試<b>累加</b>。</span><span class="en">Open <b>Ingredients</b> (fixtures) to reverse-look-up each item: which tests use it, total demand and stock. Demand is <b>summed</b>.</span></p>
+        <div class="note anim" style="animation-delay:.24s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="zh">只顯示你被分配專案用到的食材。</span><span class="en">Shows only ingredients used by your assigned projects.</span></div>
+      </div>
+      <div class="col anim" style="animation-delay:.2s; justify-content:center;">
+        <div class="card" style="padding:30px 34px;">
+          <div style="display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-radius:6px; padding:12px 16px; margin-bottom:20px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="mono" style="font-size:19px; color:var(--ink-2);"><span class="zh">起司</span><span class="en">cheese</span></span></div>
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid var(--line); border-radius:6px;">
+            <span class="ic" style="width:60px;height:60px;font-size:16px;background:var(--warn-soft);color:var(--warn);border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;">Mc5</span>
+            <div style="flex:1;"><div class="mono" style="color:var(--accent); font-size:15px; font-weight:600;">Mc5</div><div style="font-size:22px; font-weight:700; margin:3px 0;"><span class="zh">切達起司片</span><span class="en">Cheddar slice</span></div><div class="mono" style="font-size:15px; color:var(--ink-3);"><span class="zh">用於 1 項 · 需求 ×2</span><span class="en">in 1 test · demand ×2</span></div></div>
+            <span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">食材查詢</span><span class="en">Ingredient lookup</span></div>
+    <div class="pno">08</div>
+  </section>
+
+  <!-- 9 · STEP 7 TOOL LOOKUP -->
+  <section class="slide grid" data-label="步驟七 廚具查詢">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–05</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">06</span><span class="rt"><span class="zh">食材查詢</span><span class="en">Food</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">07</span><span class="rt"><span class="zh">廚具查詢</span><span class="en">Tool lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">08–09</span><span class="rt"><span class="zh">盤點</span><span class="en">Stock</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div class="body">
+      <div class="col" style="justify-content:center; flex:.9;">
+        <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 07</span><span class="en">Step 07</span></span>
+        <h2 class="biglead anim" style="margin-top:16px; animation-delay:.1s"><span class="zh">廚具怎麼查</span><span class="en">How to look up a tool</span></h2>
+        <p class="lead anim" style="animation-delay:.16s"><span class="zh"><b>「設備盤點」</b> 頁列出每項廚具用在哪些測試。需求為所有測試的 <b>最高單次用量</b>（廚具共用、不累加）。</span><span class="en">The <b>Equipment</b> page lists which tests use each tool. Demand is the <b>peak per-test usage</b> (shared, not summed).</span></p>
+        <div class="note anim" style="animation-delay:.24s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span class="zh">同一個煎台可以做很多測試，所以算「最高」不是「相加」。</span><span class="en">One griddle serves many tests — so it's the "max", not a sum.</span></div>
+      </div>
+      <div class="col anim" style="animation-delay:.2s; justify-content:center;">
+        <div class="card" style="padding:30px 34px;">
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid var(--line); border-radius:6px; margin-bottom:14px;">
+            <span style="width:60px;height:60px;border-radius:8px;background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent);display:grid;place-items:center;flex:none;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="6" y1="17" x2="6" y2="21"/><line x1="18" y1="17" x2="18" y2="21"/></svg></span>
+            <div style="flex:1;"><div style="font-size:22px; font-weight:700;"><span class="zh">煎台</span><span class="en">Griddle</span></div><div class="mono" style="font-size:15px; color:var(--ink-3); margin-top:3px;">McA</div></div>
+            <div style="text-align:right;"><div class="mono" style="font-size:14px;color:var(--ink-3);"><span class="zh">需求(最高)</span><span class="en">Peak</span></div><div style="font-size:30px;font-weight:800;color:var(--accent);">1</div></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid var(--line); border-radius:6px;">
+            <span style="width:60px;height:60px;border-radius:8px;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <div style="flex:1;"><div style="font-size:22px; font-weight:700;"><span class="zh">麵包烘烤機</span><span class="en">Bun toaster</span></div><div class="mono" style="font-size:15px; color:var(--ink-3); margin-top:3px;">McC</div></div>
+            <div style="text-align:right;"><div class="mono" style="font-size:14px;color:var(--ink-3);"><span class="zh">需求(最高)</span><span class="en">Peak</span></div><div style="font-size:30px;font-weight:800;color:var(--accent);">1</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">廚具查詢</span><span class="en">Tool lookup</span></div>
+    <div class="pno">09</div>
+  </section>
+
+  <!-- 10 · STEP 8 FOOD STOCK-TAKE -->
+  <section class="slide grid" data-label="步驟八 食材盤點">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–07</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">08</span><span class="rt"><span class="zh">食材盤點</span><span class="en">Food stock</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">09</span><span class="rt"><span class="zh">廚具盤點</span><span class="en">Tool count</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:8px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 08</span><span class="en">Step 08</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">食材盤點：輸入實際數量並提交</span><span class="en">Food stock-take: enter counts and submit</span></h2>
+    </div>
+    <p class="lead anim" style="animation-delay:.14s; margin:12px 0 24px;"><span class="zh">在 <b>「庫存盤點」</b> 頁用 <b>＋／−</b> 或直接輸入各食材的實際數量。需求為<b>累加</b>；不足會反<b>粉紅</b>並標記短缺。輸入即自動儲存並同步。</span><span class="en">On <b>Stock-take</b>, set each ingredient's quantity with <b>＋／−</b> or typing. Demand is <b>summed</b>; shortfalls turn <b>pink</b>. Entries auto-save and sync.</span></p>
+    <div class="stk">
+      <div class="stkrow anim" style="animation-delay:.18s"><div><div class="sk-n"><span class="zh">切達起司片</span><span class="en">Cheddar slice</span></div><div class="sk-c">Mc5</div></div><div class="sk-need"><span class="zh">需求</span><span class="en">Need</span> 2</div><div class="stepper"><b>−</b><span class="val">2</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+      <div class="stkrow short anim" style="animation-delay:.26s"><div><div class="sk-n"><span class="zh">番茄</span><span class="en">Tomato</span></div><div class="sk-c">Mc6</div></div><div class="sk-need"><span class="zh">需求</span><span class="en">Need</span> 2</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-short"><span class="zh">短缺 −1</span><span class="en">short −1</span></span></div>
+      <div class="stkrow anim" style="animation-delay:.34s"><div><div class="sk-n"><span class="zh">芝麻麵包</span><span class="en">Sesame bun</span></div><div class="sk-c">Mc1</div></div><div class="sk-need"><span class="zh">需求</span><span class="en">Need</span> 1</div><div class="stepper"><b>−</b><span class="val">3</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+    </div>
+    <div class="note anim" style="animation-delay:.42s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="zh">粉紅底＝短缺需補齊。完成後管理員在盤點總覽看到 DEMO 的回報。</span><span class="en">Pink = shortfall to top up. When done, the admin sees DEMO's counts.</span></div>
+    <div class="ribbon"><span class="zh">食材盤點</span><span class="en">Food stock-take</span></div>
+    <div class="pno">10</div>
+  </section>
+
+  <!-- 11 · STEP 9 TOOL COUNT -->
+  <section class="slide grid" data-label="步驟九 廚具盤點">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–07</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">08</span><span class="rt"><span class="zh">食材盤點</span><span class="en">Food</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">09</span><span class="rt"><span class="zh">廚具盤點</span><span class="en">Tool count</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:8px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 09</span><span class="en">Step 09</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">廚具盤點：需求取最高，輸入後提交</span><span class="en">Tool count: demand is the max — enter and submit</span></h2>
+    </div>
+    <p class="lead anim" style="animation-delay:.14s; margin:12px 0 24px;"><span class="zh">在 <b>「設備盤點」</b> 頁輸入各廚具的實際數量。需求＝所有測試的 <b>最高用量</b>（廚具可共用，不累加）。</span><span class="en">On the <b>Equipment</b> page enter each tool's quantity. Demand = the <b>peak usage</b> across tests (shared, not summed).</span></p>
+    <div class="stk">
+      <div class="stkrow anim" style="animation-delay:.18s"><div><div class="sk-n"><span class="zh">煎台</span><span class="en">Griddle</span></div><div class="sk-c">McA</div></div><div class="sk-need"><span class="zh">最高</span><span class="en">Max</span> 1</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+      <div class="stkrow anim" style="animation-delay:.26s"><div><div class="sk-n"><span class="zh">漢堡煎鏟</span><span class="en">Spatula</span></div><div class="sk-c">McB</div></div><div class="sk-need"><span class="zh">最高</span><span class="en">Max</span> 1</div><div class="stepper"><b>−</b><span class="val">2</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+      <div class="stkrow short anim" style="animation-delay:.34s"><div><div class="sk-n"><span class="zh">麵包烘烤機</span><span class="en">Bun toaster</span></div><div class="sk-c">McC</div></div><div class="sk-need"><span class="zh">最高</span><span class="en">Max</span> 1</div><div class="stepper"><b>−</b><span class="val">0</span><b>+</b></div><span class="badge-short"><span class="zh">短缺 −1</span><span class="en">short −1</span></span></div>
+    </div>
+    <div class="note anim" style="animation-delay:.42s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span class="zh">注意需求欄是「最高」不是「加總」——這是廚具與食材最大的差別。</span><span class="en">Note the "Max" column, not a sum — the key difference from food.</span></div>
+    <div class="ribbon"><span class="zh">廚具盤點</span><span class="en">Tool count</span></div>
+    <div class="pno">11</div>
+  </section>
+
+  <!-- 12 · STEP 10 CHANGE ALERTS + PINK -->
+  <section class="slide grid" data-label="步驟十 變更通知">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–09</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">10</span><span class="rt"><span class="zh">變更通知</span><span class="en">Change alerts</span></span></div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:20px;">
+      <span class="tag pink anim" style="animation-delay:.05s"><span class="zh">步驟 10</span><span class="en">Step 10</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">變更通知與「粉紅色」的意義</span><span class="en">Change alerts &amp; what "pink" means</span></h2>
+    </div>
+    <div class="body" style="gap:36px;">
+      <div class="col" style="flex:1;">
+        <div class="pinkcard anim" style="animation-delay:.16s">
+          <span class="bell"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dotn">1</span></span>
+          <div><div class="pk-t"><span class="zh">右上角鈴鐺</span><span class="en">The bell (top-right)</span></div><div class="pk-d"><span class="zh">管理員新增／修改測試、食材、廚具或版本時，鈴鐺亮紅點。點開看變更清單與時間。</span><span class="en">When the admin adds or edits a test, ingredient, tool or version, the bell shows a red dot. Open it for the change list.</span></div></div>
+        </div>
+        <div class="pinkcard anim" style="animation-delay:.26s; margin-top:16px;">
+          <span class="pk-i"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>
+          <div><div class="pk-t"><span class="zh">粉紅底＝需要你注意</span><span class="en">Pink = needs your attention</span></div><div class="pk-d"><span class="zh">兩種情況反粉紅：① 盤點<b>短缺</b>；② 該食材／廚具<b>被管理員變更過</b>，需重新確認盤點。</span><span class="en">Two cases turn pink: ① a <b>shortfall</b>; ② an item the admin <b>changed</b> that you must re-check.</span></div></div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:.85; animation-delay:.28s; justify-content:center;">
+        <div class="stk">
+          <div class="stkrow"><div><div class="sk-n"><span class="zh">切達起司片</span><span class="en">Cheddar slice</span></div><div class="sk-c">Mc5 · <span class="zh">正常</span><span class="en">normal</span></div></div><div class="sk-need">2</div><div class="stepper"><b>−</b><span class="val">2</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+          <div class="stkrow short"><div><div class="sk-n"><span class="zh">牛肉排</span><span class="en">Beef pattie</span></div><div class="sk-c" style="color:var(--pink);"><span class="zh">已變更 · 請重新確認</span><span class="en">changed · re-check</span></div></div><div class="sk-need">1</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-short"><span class="zh">已變更</span><span class="en">changed</span></span></div>
+        </div>
+        <div class="figcap"><span class="zh">盤點列反粉紅 = 該項目被管理員更新過</span><span class="en">Pink row = updated by the admin</span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">變更通知 · 粉紅提示</span><span class="en">Alerts · pink cues</span></div>
+    <div class="pno">12</div>
+  </section>
+
+  <!-- 13 · RECAP -->
+  <section class="slide dark" data-label="重點回顧 Recap">
+    <div class="kick anim"><span class="dot"></span><span class="zh">重點回顧</span><span class="en">Recap</span></div>
+    <h2 class="stitle anim" style="font-size:56px; margin:18px 0 30px; animation-delay:.05s"><span class="zh">十步走完，用大麥克讀懂整套系統</span><span class="en">Ten steps — the whole system, via one Big Mac</span></h2>
+    <div class="recap-list">
+      <div class="ritem anim" style="animation-delay:.12s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>登入 → 目前專案</b>：DEMO / 密碼 DEMO，只看到被分配的 BigMac。</span><span class="en"><b>Login → Projects</b>: DEMO / code DEMO, see only the assigned BigMac.</span></span></div>
+      <div class="ritem anim" style="animation-delay:.2s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>食材＋廚具 → 製作</b>：6 食材、3 廚具，照 7 步驟做，上傳實拍對比官圖。</span><span class="en"><b>Food + tools → cook</b>: 6 ingredients, 3 tools, 7 steps, upload a photo vs the official one.</span></span></div>
+      <div class="ritem anim" style="animation-delay:.28s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>報告 → 查詢 → 盤點</b>：填結果送出；食材<b>累加</b>、廚具<b>取最高</b>。</span><span class="en"><b>Report → lookup → stock-take</b>: submit; food <b>sums</b>, tools take the <b>max</b>.</span></span></div>
+      <div class="ritem anim" style="animation-delay:.36s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>變更通知</b>：留意鈴鐺紅點，<b>粉紅</b>＝短缺或項目被變更需重新確認。</span><span class="en"><b>Alerts</b>: watch the bell; <b>pink</b> = shortfall or a changed item to re-check.</span></span></div>
+    </div>
+    <div class="ribbon"><span class="zh">完 · 供應商流程指引 麥當勞版</span><span class="en">End · Supplier Guide (Big Mac demo)</span></div>
+    <div class="pno">13</div>
+  </section>
+
+</deck-stage>
+
+<script>
+  function setGuideLang(l){
+    document.documentElement.setAttribute('data-lang', l);
+    document.documentElement.setAttribute('lang', l === 'zh' ? 'zh-Hant' : 'en');
+    var z=document.getElementById('lang-zh'), e=document.getElementById('lang-en');
+    if(z&&e){ z.classList.toggle('on', l==='zh'); e.classList.toggle('on', l==='en'); }
+    try{ localStorage.setItem('guideV2Lang', l); }catch(err){}
+  }
+  (function(){ try{ var s=localStorage.getItem('guideV2Lang'); if(s) setGuideLang(s); }catch(err){} })();
+</script>
+<script src="deck-stage.js"></script>
+</body>
+</html>

@@ -60,6 +60,12 @@
             out = next;
             tries++;
           }
+          // Guarantee JPEG output: every uploaded photo must be JPEG-encoded.
+          // The only way `out` is non-JPEG is a tainted/cross-origin canvas,
+          // which cannot happen for a local FileReader upload — but enforce it
+          // explicitly so a PNG/HEIC can never slip through and be stored as-is.
+          if (typeof out !== "string" || out.slice(0, 11) !== "data:image/") { reject(new Error("encode-failed")); return; }
+          if (out.slice(0, 15) !== "data:image/jpeg") { reject(new Error("not-jpeg")); return; }
           resolve(out);
         };
         img.src = fr.result;
@@ -616,8 +622,25 @@
      collection subscription (same as stock/report), so admin can review
      submissions read-only; admin still cannot overwrite them. */
   function stepphoto_key(itemId, stepIndex) { return itemId + ":" + stepIndex; }
-  function stepphoto_mapFor(vendorId) {
+  /* Step photos are base64 data-URIs → they blow past localStorage's ~5MB cap
+     ("空間不足"). Store in IndexedDB (big quota) with an in-memory cache for
+     synchronous reads and legacy-localStorage migration, mirroring the store. */
+  const _stepCache = {};           // vendorId -> map
+  function _stepLoadLS(vendorId) {
     try { return JSON.parse(localStorage.getItem("bff:stepphoto:" + vendorId) || "{}"); } catch (e) { return {}; }
+  }
+  function stepphoto_mapFor(vendorId) {
+    if (_stepCache[vendorId]) return _stepCache[vendorId];
+    const v = _stepLoadLS(vendorId);
+    _stepCache[vendorId] = v;
+    return v;
+  }
+  function _stepPersist(vendorId, map) {
+    _stepCache[vendorId] = map;
+    if (useIDB) {
+      window.KV.set("bff:stepphoto:" + vendorId, map).catch(() => saveLocal("bff:stepphoto:" + vendorId, map));
+      try { localStorage.removeItem("bff:stepphoto:" + vendorId); } catch (e) {}
+    } else { saveLocal("bff:stepphoto:" + vendorId, map); }
   }
   function stepphoto_get(vendorId, itemId, stepIndex) {
     if (!vendorId) return null;
@@ -627,14 +650,14 @@
     if (!vendorId) return;
     const map = stepphoto_mapFor(vendorId);
     map[stepphoto_key(itemId, stepIndex)] = dataUri;
-    try { localStorage.setItem("bff:stepphoto:" + vendorId, JSON.stringify(map)); } catch (e) {}
+    _stepPersist(vendorId, map);
     window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
   }
   function stepphoto_remove(vendorId, itemId, stepIndex) {
     if (!vendorId) return;
     const map = stepphoto_mapFor(vendorId);
     delete map[stepphoto_key(itemId, stepIndex)];
-    try { localStorage.setItem("bff:stepphoto:" + vendorId, JSON.stringify(map)); } catch (e) {}
+    _stepPersist(vendorId, map);
     window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
   }
   /* all of one vendor's submissions, as [{itemId, stepIndex, dataUri}] */
@@ -655,6 +678,32 @@
     });
     return out;
   }
+
+  /* async: hydrate step photos from IDB into the cache (sync reads need it),
+     migrate any legacy localStorage maps, then refresh the UI. */
+  (async function hydrateStepPhotos() {
+    if (!useIDB || !window.KV.keys) return;
+    try {
+      const ks = (await window.KV.keys()) || [];
+      for (const k of ks) {
+        if (k.indexOf("bff:stepphoto:") === 0) {
+          const v = await window.KV.get(k);
+          if (v) _stepCache[k.slice("bff:stepphoto:".length)] = v;
+        }
+      }
+      for (let i = 0; i < localStorage.length; i++) {   // migrate legacy LS → IDB
+        const k = localStorage.key(i);
+        if (k && k.indexOf("bff:stepphoto:") === 0) {
+          const vid = k.slice("bff:stepphoto:".length);
+          if (!_stepCache[vid]) {
+            const v = _stepLoadLS(vid);
+            if (v && Object.keys(v).length) { _stepCache[vid] = v; window.KV.set(k, v).catch(() => {}); }
+          }
+        }
+      }
+      window.dispatchEvent(new CustomEvent("bff:stepphotochange"));
+    } catch (e) {}
+  })();
 
   /* ---- snapshot backup / restore (stand-in for cloud sync) ---- */
   function collectStock() {

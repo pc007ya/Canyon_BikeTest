@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="zh-Hant" data-lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>供應商流程指引 v2 · Supplier Guide (DEMO)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+<link href="guide-v2.css" rel="stylesheet" />
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#152232"/>
+  <g fill="none" stroke="#5f95e6" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="20" y="30" width="22" height="16" rx="3"/><rect x="58" y="30" width="22" height="16" rx="3"/>
+    <rect x="39" y="58" width="22" height="16" rx="3"/><path d="M42 38h16M50 46v12"/>
+  </g>
+</svg>
+</template>
+
+<div class="langbar no-print" role="group" aria-label="language">
+  <button id="lang-zh" class="on" onclick="setGuideLang('zh')">中文</button>
+  <button id="lang-en" onclick="setGuideLang('en')">EN</button>
+</div>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ============ 1 · COVER ============ -->
+  <section class="slide dark" data-label="封面 Cover">
+    <div style="margin:auto 0;">
+      <div class="cover-badge anim"><span class="zh">FRM205 V03 · 供應商指引 v2</span><span class="en">FRM205 V03 · Supplier Guide v2</span></div>
+      <h1 class="cover-h anim" style="animation-delay:.08s"><span class="zh">供應商流程指引</span><span class="en">Supplier Guide</span></h1>
+      <div class="cover-sub anim" style="animation-delay:.16s"><span class="zh">以 <b>DEMO</b> 帳號完整走一遍：從登入、盤點到上傳報告</span><span class="en">A full walk-through with the <b>DEMO</b> account — login, inventory, and report upload</span></div>
+      <div class="cover-meta anim" style="animation-delay:.26s">
+        <div class="cm"><span class="k"><span class="zh">帳號</span><span class="en">Account</span></span><span class="v mono">DEMO</span></div>
+        <div class="cm"><span class="k"><span class="zh">範例測試</span><span class="en">Example</span></span><span class="v"><span class="zh">FRM·18 水平疲勞</span><span class="en">FRM·18 Horizontal fatigue</span></span></div>
+        <div class="cm"><span class="k"><span class="zh">步驟</span><span class="en">Steps</span></span><span class="v"><span class="zh">10 步驟</span><span class="en">10 steps</span></span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">腳踏車品管部門 · 測試制具查詢系統</span><span class="en">Bicycle QC · Test Fixture Finder</span></div>
+    <div class="pno">01</div>
+  </section>
+
+  <!-- ============ 2 · FLOWCHART OVERVIEW ============ -->
+  <section class="slide grid" data-label="流程總覽 Overview">
+    <div class="kick anim"><span class="dot"></span><span class="zh">整體流程 · 十個步驟</span><span class="en">The journey · ten steps</span></div>
+    <h2 class="stitle anim" style="font-size:54px; margin:20px 0 0; animation-delay:.05s"><span class="zh">供應商完整流程一覽</span><span class="en">The complete supplier flow</span></h2>
+
+    <div class="fcwrap">
+      <div class="fcrow">
+        <div class="fnode anim pop" style="animation-delay:.12s"><span class="fn-n">1</span><span class="fn-t"><span class="zh">登入</span><span class="en">Log in</span></span><span class="fn-d"><span class="zh">選 DEMO、輸入密碼</span><span class="en">Pick DEMO, enter code</span></span></div>
+        <div class="farrow anim" style="animation-delay:.2s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.24s"><span class="fn-n">2</span><span class="fn-t"><span class="zh">目前專案</span><span class="en">Projects</span></span><span class="fn-d"><span class="zh">檢視分配的案子</span><span class="en">See assigned work</span></span></div>
+        <div class="farrow anim" style="animation-delay:.32s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.36s"><span class="fn-n">3</span><span class="fn-t"><span class="zh">制具與設備</span><span class="en">Fixtures &amp; equip.</span></span><span class="fn-d"><span class="zh">確認測試所需</span><span class="en">Confirm what's needed</span></span></div>
+        <div class="farrow anim" style="animation-delay:.44s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.48s"><span class="fn-n">4</span><span class="fn-t"><span class="zh">安裝＋對比照</span><span class="en">Setup + photo</span></span><span class="fn-d"><span class="zh">上傳實拍對比官圖</span><span class="en">Upload vs official</span></span></div>
+        <div class="farrow anim" style="animation-delay:.56s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.6s"><span class="fn-n">5</span><span class="fn-t"><span class="zh">通過標準＋報告</span><span class="en">Criteria + report</span></span><span class="fn-d"><span class="zh">填寫結果並提交</span><span class="en">Fill &amp; submit</span></span></div>
+      </div>
+      <div class="fcrow">
+        <div class="fnode anim pop" style="animation-delay:.66s"><span class="fn-n">6</span><span class="fn-t"><span class="zh">制具查詢</span><span class="en">Fixture lookup</span></span><span class="fn-d"><span class="zh">制具總覽反查</span><span class="en">Fixture overview</span></span></div>
+        <div class="farrow anim" style="animation-delay:.74s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.78s"><span class="fn-n">7</span><span class="fn-t"><span class="zh">設備查詢</span><span class="en">Equipment lookup</span></span><span class="fn-d"><span class="zh">設備清單反查</span><span class="en">Equipment list</span></span></div>
+        <div class="farrow anim" style="animation-delay:.86s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:.9s"><span class="fn-n">8</span><span class="fn-t"><span class="zh">庫存盤點</span><span class="en">Stock-take</span></span><span class="fn-d"><span class="zh">制具數量提交</span><span class="en">Submit fixtures</span></span></div>
+        <div class="farrow anim" style="animation-delay:.98s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:1.02s"><span class="fn-n">9</span><span class="fn-t"><span class="zh">設備盤點</span><span class="en">Equip. count</span></span><span class="fn-d"><span class="zh">設備數量提交</span><span class="en">Submit equipment</span></span></div>
+        <div class="farrow anim" style="animation-delay:1.1s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="fnode anim pop" style="animation-delay:1.14s"><span class="fn-n">10</span><span class="fn-t"><span class="zh">變更通知</span><span class="en">Change alerts</span></span><span class="fn-d"><span class="zh">鈴鐺與粉紅提示</span><span class="en">Bell &amp; pink cues</span></span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">流程總覽</span><span class="en">Overview</span></div>
+    <div class="pno">02</div>
+  </section>
+
+  <!-- ============ 3 · STEP 1 LOGIN (DEMO) ============ -->
+  <section class="slide grid" data-label="步驟一 登入">
+    <div class="rail anim">
+      <div class="rstep cur"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">03</span><span class="rt"><span class="zh">制具設備</span><span class="en">Fixtures</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">04–05</span><span class="rt"><span class="zh">安裝報告</span><span class="en">Setup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div class="body">
+      <div class="col" style="justify-content:center; flex:1.1;">
+        <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 01</span><span class="en">Step 01</span></span>
+        <h2 class="biglead anim" style="margin-top:16px; animation-delay:.1s"><span class="zh">選定廠商並輸入密碼</span><span class="en">Pick your company &amp; enter the code</span></h2>
+        <p class="lead anim" style="animation-delay:.16s"><span class="zh">在登入頁選 <b>「供應商」</b> 分頁，點選貴公司（本教學用 <b>DEMO</b>），輸入專屬 <b>存取碼</b> 後按「登入系統」。資料依公司分開儲存並即時同步雲端。</span><span class="en">On the login page choose the <b>Supplier</b> tab, select your company (this guide uses <b>DEMO</b>), enter your <b>access code</b> and press "Log in". Data is stored per company and synced live.</span></p>
+        <div class="note anim" style="animation-delay:.24s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="zh">存取碼由品管部提供，請勿共用帳號；忘記時聯繫窗口重設。</span><span class="en">Access codes are issued by QC — don't share accounts; contact us to reset.</span>
+        </div>
+      </div>
+      <div class="col anim" style="animation-delay:.2s; justify-content:center;">
+        <div class="card" style="padding:38px 42px;">
+          <div class="kick" style="font-size:15px;"><span class="dot"></span><span class="zh">供應商登入</span><span class="en">Supplier login</span></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:24px 0 20px;">
+            <div style="border:1.5px solid var(--line); border-radius:5px; padding:14px 16px; display:flex; align-items:center; gap:12px;"><span style="width:32px;height:32px;border-radius:50%;background:var(--surface-2);color:var(--ink-3);display:grid;place-items:center;font-weight:700;">巨</span><span style="font-size:19px;font-weight:600;color:var(--ink-2);"><span class="zh">巨大機械</span><span class="en">Giant</span></span></div>
+            <div style="border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:5px; padding:14px 16px; display:flex; align-items:center; gap:12px;"><span style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;">D</span><span style="font-size:19px;font-weight:600;">DEMO</span></div>
+          </div>
+          <div class="kick" style="font-size:14px; margin-bottom:10px;"><span class="zh">存取碼</span><span class="en">Access code</span></div>
+          <div class="mono" style="border:1.5px solid var(--line); border-radius:5px; padding:14px 16px; font-size:24px; letter-spacing:.4em; color:var(--ink-3);">••••</div>
+          <div style="margin-top:20px; background:var(--accent); color:#fff; border-radius:5px; padding:15px; text-align:center; font-size:21px; font-weight:600;"><span class="zh">登入系統</span><span class="en">Log in</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">登入</span><span class="en">Login</span></div>
+    <div class="pno">03</div>
+  </section>
+
+  <!-- ============ 4 · STEP 2 CURRENT PROJECTS ============ -->
+  <section class="slide grid" data-label="步驟二 目前專案">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">03</span><span class="rt"><span class="zh">制具設備</span><span class="en">Fixtures</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">04–05</span><span class="rt"><span class="zh">安裝報告</span><span class="en">Setup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:6px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 02</span><span class="en">Step 02</span></span>
+      <h2 class="stitle anim" style="font-size:46px; margin:0; animation-delay:.1s"><span class="zh">點左上「目前專案」檢視分配的案子</span><span class="en">Open "Current projects" (top-left) to see your assigned work</span></h2>
+    </div>
+    <p class="lead anim" style="animation-delay:.14s; margin:14px 0 26px;"><span class="zh">登入後導覽列左側有 <b>「目前專案」</b>。你只會看到管理員分配給 DEMO 的產品代號與其涵蓋的測試——沒被分配的一律不顯示，制具與設備需求也不會出現。</span><span class="en">After login the nav shows <b>Current projects</b> on the left. You only see the product codes assigned to DEMO and their tests — anything not assigned to you is hidden, and so are its fixtures and equipment.</span></p>
+
+    <div class="body" style="gap:36px;">
+      <div class="col" style="flex:1.15;">
+        <div class="projgrid">
+          <div class="projc anim" style="animation-delay:.2s">
+            <div class="ph"><span class="pcode">MTB-01</span><span class="pname"><span class="zh">越野示範車架</span><span class="en">Trail demo frame</span></span><span class="tag" style="margin-left:auto;">MTB</span></div>
+            <div class="pb">
+              <div class="prow"><span class="zh">涵蓋測試</span><span class="en">Covered tests</span><b>6</b></div>
+              <div class="prow"><span class="zh">車架參數</span><span class="en">Frame params</span><b><span class="zh">點代號展開</span><span class="en">tap code</span></b></div>
+            </div>
+          </div>
+          <div class="projc anim" style="animation-delay:.28s">
+            <div class="ph"><span class="pcode">CITY-02</span><span class="pname"><span class="zh">通勤示範車架</span><span class="en">City demo frame</span></span><span class="tag" style="margin-left:auto;">CITY</span></div>
+            <div class="pb">
+              <div class="prow"><span class="zh">涵蓋測試</span><span class="en">Covered tests</span><b>4</b></div>
+              <div class="prow"><span class="zh">車款圖／規格圖</span><span class="en">Bike / spec photo</span><b><span class="zh">可切換</span><span class="en">toggle</span></b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:.85; animation-delay:.24s;">
+        <div class="kick" style="font-size:15px; margin-bottom:14px;"><span class="dot"></span><span class="zh">頁面可用功能</span><span class="en">What you can do here</span></div>
+        <div class="feat">
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><div><div class="ft"><span class="zh">測試項目</span><span class="en">Tests</span></div><div class="fd"><span class="zh">點測試卡片看細節</span><span class="en">Open a test card</span></div></div></div>
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span><div><div class="ft"><span class="zh">制具總覽</span><span class="en">Fixtures</span></div><div class="fd"><span class="zh">反查制具用在哪</span><span class="en">Reverse lookup</span></div></div></div>
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span><div><div class="ft"><span class="zh">盤點</span><span class="en">Stock-take</span></div><div class="fd"><span class="zh">庫存與設備盤點</span><span class="en">Fixtures &amp; equip.</span></div></div></div>
+          <div class="featc"><span class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><div><div class="ft"><span class="zh">變更通知</span><span class="en">Alerts</span></div><div class="fd"><span class="zh">鈴鐺看更新</span><span class="en">Bell for updates</span></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">目前專案</span><span class="en">Current projects</span></div>
+    <div class="pno">04</div>
+  </section>
+
+  <!-- ============ 5 · STEP 3 FIXTURES + EQUIPMENT ============ -->
+  <section class="slide grid" data-label="步驟三 制具設備">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">03</span><span class="rt"><span class="zh">制具設備</span><span class="en">Fixtures</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">04–05</span><span class="rt"><span class="zh">安裝報告</span><span class="en">Setup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 03</span><span class="en">Step 03</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">點測試項目，確認所需制具與設備</span><span class="en">Open a test — confirm its fixtures &amp; equipment</span></h2>
+      <span class="mono anim" style="animation-delay:.14s; color:var(--ink-3); font-size:20px; margin-left:auto;">FRM·18 · <span class="zh">水平疲勞</span><span class="en">H-fatigue</span></span>
+    </div>
+
+    <div class="body" style="margin-top:24px; gap:36px;">
+      <div class="col" style="flex:1.35;">
+        <div class="kick anim" style="font-size:15px; margin-bottom:12px; animation-delay:.16s"><span class="dot"></span><span class="zh">所需制具 · 8 件（含鎖固扭矩）</span><span class="en">Fixtures · 8 pcs (with torque)</span></div>
+        <div class="tiles fx">
+          <div class="tile anim" style="animation-delay:.2s"><div class="timg"><img src="jigs/A37.png" alt=""/></div><div class="tcode">A37 · J845.1</div><div class="tname"><span class="zh">避震器假件</span><span class="en">Shock dummy</span></div><div class="ttq">×1 · 5/18 N·m</div></div>
+          <div class="tile anim" style="animation-delay:.25s"><div class="timg"><img src="jigs/A1.png" alt=""/></div><div class="tcode">A1 · J068.1</div><div class="tname"><span class="zh">前叉假件</span><span class="en">Fork dummy</span></div><div class="ttq">×1 · 12 N·m</div></div>
+          <div class="tile anim" style="animation-delay:.3s"><div class="timg"><img src="jigs/A11.png" alt=""/></div><div class="tcode">A11 · J190.1</div><div class="tname"><span class="zh">前輪轂</span><span class="en">Front hub</span></div><div class="ttq">×1 · —</div></div>
+          <div class="tile anim" style="animation-delay:.35s"><div class="timg"><img src="jigs/A6.png" alt=""/></div><div class="tcode">A6 · J311.1</div><div class="tname"><span class="zh">前軸假件</span><span class="en">Front axle</span></div><div class="ttq">×1 · 10 N·m</div></div>
+        </div>
+        <div class="mono anim" style="animation-delay:.4s; color:var(--ink-3); font-size:16px; margin-top:12px;"><span class="zh">＋ A8 / A9 軸承假件、A10 後輪轂、A90 後穿軸 …（共 8 件）</span><span class="en">＋ A8 / A9 bearings, A10 rear hub, A90 thru-axle … (8 total)</span></div>
+      </div>
+      <div class="col anim" style="flex:.9; animation-delay:.3s;">
+        <div class="kick" style="font-size:15px; margin-bottom:12px;"><span class="dot"></span><span class="zh">所需設備 · 可共用</span><span class="en">Equipment · shared</span></div>
+        <div class="eqgrid" style="grid-template-columns:1fr;">
+          <div class="eqtile"><span class="eqi"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span><div><div class="eqn"><span class="zh">萬用試驗機</span><span class="en">Universal test machine</span></div><div class="eqc">TM-UNI · ×1</div></div></div>
+          <div class="eqtile act"><span class="eqi"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span><div><div class="eqn"><span class="zh">伺服液壓致動器</span><span class="en">Servo-hydraulic actuator</span></div><div class="eqc">ACT-SH · ×1</div></div></div>
+          <div class="eqtile ins"><span class="eqi"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><line x1="7" y1="20" x2="17" y2="20"/></svg></span><div><div class="eqn"><span class="zh">數據擷取／控制系統</span><span class="en">DAQ &amp; control</span></div><div class="eqc">SYS-DAQ · ×1</div></div></div>
+        </div>
+        <div class="note" style="margin-top:16px; font-size:19px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span class="zh">制具<b>累加</b>、設備<b>取最高</b>——盤點時算法不同。</span><span class="en">Fixtures <b>sum</b>, equipment takes the <b>max</b> — different at stock-take.</span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">制具與設備</span><span class="en">Fixtures &amp; equipment</span></div>
+    <div class="pno">05</div>
+  </section>
+
+  <!-- ============ 6 · STEP 4 SETUP + ANNOTATE PHOTO ============ -->
+  <section class="slide grid" data-label="步驟四 安裝對比">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01</span><span class="rt"><span class="zh">登入</span><span class="en">Login</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">02</span><span class="rt"><span class="zh">專案</span><span class="en">Projects</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">03</span><span class="rt"><span class="zh">制具設備</span><span class="en">Fixtures</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">04</span><span class="rt"><span class="zh">安裝</span><span class="en">Setup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">05</span><span class="rt"><span class="zh">報告</span><span class="en">Report</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–10</span><span class="rt"><span class="zh">查詢通知</span><span class="en">More</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:20px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 04</span><span class="en">Step 04</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">理解安裝步驟，上傳實拍對比官方示意圖</span><span class="en">Follow the setup; upload your photo beside the official diagram</span></h2>
+    </div>
+
+    <div class="body" style="gap:32px;">
+      <div class="col" style="flex:.82;">
+        <div class="steplist">
+          <div class="stepi anim" style="animation-delay:.16s"><span class="si-n">01</span><div><div class="si-t"><span class="zh">前置組裝</span><span class="en">Pre-assembly</span></div><div class="si-d"><span class="zh">裝 Flip Chip 與避震器假件 A37，裝上 RD hanger。</span><span class="en">Fit the Flip Chip, shock dummy A37 and RD hanger.</span></div></div></div>
+          <div class="stepi anim" style="animation-delay:.24s"><span class="si-n">02</span><div><div class="si-t"><span class="zh">假叉、輪轂上機</span><span class="en">Fork, hubs, mount</span></div><div class="si-d"><span class="zh">裝假叉 A1 與前/後輪轂，以 A90＋A6 上機。</span><span class="en">Fit fork A1, front/rear hubs, mount with A90＋A6.</span></div></div></div>
+          <div class="stepi anim" style="animation-delay:.32s"><span class="si-n">03</span><div><div class="si-t"><span class="zh">調整並開始</span><span class="en">Adjust &amp; start</span></div><div class="si-d"><span class="zh">調整前軸缸位置，最終檢查後開始循環測試。</span><span class="en">Set the front-axle actuator, final check, then run.</span></div></div></div>
+        </div>
+        <div class="note pink anim" style="animation-delay:.4s"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span class="zh">你的實拍<b>不會覆蓋官方圖</b>——並排顯示，且各供應商只看得到自己的版本。</span><span class="en">Your photo <b>never replaces the official one</b> — shown side-by-side, and each supplier sees only their own.</span></div>
+      </div>
+      <div class="col anim" style="flex:1.18; animation-delay:.26s;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; flex:1; min-height:0;">
+          <div style="display:flex; flex-direction:column;">
+            <div class="schem" style="flex:1;">
+              <span class="frame-lbl"><span class="zh">官方示意圖</span><span class="en">Official diagram</span></span>
+              <img src="uploads/FeedClaude/18_Horizontal_Fatigue/page_44_img_1.jpeg" alt=""/>
+            </div>
+            <div class="figcap"><span class="zh">系統內建 · 前軸水平施力</span><span class="en">Built-in · front-axle load</span></div>
+          </div>
+          <div style="display:flex; flex-direction:column;">
+            <div class="schem" style="flex:1;">
+              <span class="frame-lbl sup"><span class="zh">DEMO 實拍</span><span class="en">DEMO photo</span></span>
+              <div class="photo-ph" style="width:100%;height:100%;">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span class="ph-t"><span class="zh">供應商上傳照片</span><span class="en">Supplier upload</span></span>
+                <span class="ph-s"><span class="zh">（待放入示範照片）</span><span class="en">(demo photo pending)</span></span>
+              </div>
+            </div>
+            <div class="figcap"><span class="zh">你的實拍 · 對比核對</span><span class="en">Your photo · for comparison</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">安裝步驟 · 對比照片</span><span class="en">Setup · photo compare</span></div>
+    <div class="pno">06</div>
+  </section>
+
+  <!-- ============ 7 · STEP 5 PASS CRITERIA + REPORT ============ -->
+  <section class="slide grid" data-label="步驟五 通過標準報告">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–03</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">04</span><span class="rt"><span class="zh">安裝</span><span class="en">Setup</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">05</span><span class="rt"><span class="zh">報告</span><span class="en">Report</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">06–09</span><span class="rt"><span class="zh">查詢盤點</span><span class="en">Lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:18px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 05</span><span class="en">Step 05</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">理解通過標準，填寫報告並提交</span><span class="en">Read the pass criteria, fill the report, submit</span></h2>
+    </div>
+
+    <div class="body" style="gap:36px;">
+      <div class="col" style="flex:1;">
+        <div class="kick anim" style="font-size:15px; margin-bottom:12px; animation-delay:.14s"><span class="dot"></span><span class="zh">通過標準</span><span class="en">Pass criteria</span></div>
+        <div class="pass">
+          <div class="passc anim" style="animation-delay:.18s"><span class="pc-i"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="pc-t"><span class="zh">完成規定 <b>循環次數</b> 後，車架 <b>無裂紋</b>、無明顯永久變形。</span><span class="en">After the required <b>cycles</b>, the frame shows <b>no cracks</b> or permanent deformation.</span></span></div>
+          <div class="passc anim" style="animation-delay:.26s"><span class="pc-i"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="pc-t"><span class="zh">量測 <b>最大變形</b> 在允收範圍內，焊點與接合處完好。</span><span class="en"><b>Max deflection</b> within tolerance; welds and joints intact.</span></span></div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:1.1; animation-delay:.24s;">
+        <div class="kick" style="font-size:15px; margin-bottom:12px;"><span class="dot"></span><span class="zh">上傳報告</span><span class="en">Submit report</span></div>
+        <div class="rep" style="grid-template-columns:1fr 1fr;">
+          <div class="repf"><div class="rk"><span class="zh">測試結果</span><span class="en">Result</span></div><div class="toggle"><span class="on-ok"><span class="zh">通過</span><span class="en">Pass</span></span><span class="off"><span class="zh">不通過</span><span class="en">Fail</span></span></div></div>
+          <div class="repf"><div class="rk"><span class="zh">量測數據</span><span class="en">Data</span></div><div class="rv" style="color:var(--ink-2); font-weight:500; font-size:19px;"><span class="zh">最大變形 1.8 mm；10 萬次無裂紋</span><span class="en">Max 1.8 mm; 100k cycles, no crack</span></div></div>
+          <div class="repf" style="grid-column:1 / -1;"><div class="rk"><span class="zh">報告照片</span><span class="en">Photos</span></div><div class="rv" style="display:flex; gap:10px; margin-top:14px;"><span style="width:56px;height:56px;border:1px dashed var(--line-strong);border-radius:5px;display:grid;place-items:center;color:var(--ink-3);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><span style="width:56px;height:56px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;"></span><span style="width:56px;height:56px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;"></span></div></div>
+        </div>
+        <div style="margin-top:16px; background:var(--accent); color:#fff; border-radius:6px; padding:15px; text-align:center; font-size:21px; font-weight:600;"><span class="zh">提交報告</span><span class="en">Submit report</span></div>
+      </div>
+    </div>
+    <div class="note anim" style="animation-delay:.4s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="zh">送出後管理員即可在「測試結果」看到 DEMO 的回報，無需另外寄件。</span><span class="en">Once submitted, the admin sees DEMO's report under "Results" — no separate email needed.</span></div>
+    <div class="ribbon"><span class="zh">通過標準 · 報告</span><span class="en">Criteria · report</span></div>
+    <div class="pno">07</div>
+  </section>
+
+  <!-- ============ 8 · STEP 6 FIXTURE LOOKUP ============ -->
+  <section class="slide grid" data-label="步驟六 制具查詢">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–05</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">06</span><span class="rt"><span class="zh">制具查詢</span><span class="en">Fixture lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">07</span><span class="rt"><span class="zh">設備查詢</span><span class="en">Equip. lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">08–09</span><span class="rt"><span class="zh">盤點</span><span class="en">Stock</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div class="body">
+      <div class="col" style="justify-content:center; flex:.9;">
+        <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 06</span><span class="en">Step 06</span></span>
+        <h2 class="biglead anim" style="margin-top:16px; animation-delay:.1s"><span class="zh">對應制具怎麼查</span><span class="en">How to look up a fixture</span></h2>
+        <p class="lead anim" style="animation-delay:.16s"><span class="zh">點導覽列 <b>「制具總覽」</b>，可看到每個制具<b>反查</b>用在哪些測試、總需求件數與目前庫存狀態。用編號或名稱即時搜尋。</span><span class="en">Open <b>Fixtures</b> in the nav to <b>reverse-look-up</b> every fixture: which tests use it, total demand, and current stock. Search by code or name.</span></p>
+        <div class="note anim" style="animation-delay:.24s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="zh">只顯示你被分配專案用到的制具，需求為各測試<b>累加</b>。</span><span class="en">Shows only fixtures used by your assigned projects; demand is <b>summed</b>.</span></div>
+      </div>
+      <div class="col anim" style="animation-delay:.2s; justify-content:center;">
+        <div class="card" style="padding:30px 34px;">
+          <div style="display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-radius:6px; padding:12px 16px; margin-bottom:20px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="mono" style="font-size:19px; color:var(--ink-2);">A37</span></div>
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid var(--line); border-radius:6px;">
+            <div style="width:74px;height:74px;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);display:grid;place-items:center;overflow:hidden;"><img src="jigs/A37.png" style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;padding:5px;" alt=""/></div>
+            <div style="flex:1;"><div class="mono" style="color:var(--accent); font-size:15px; font-weight:600;">A37 · J845.1</div><div style="font-size:22px; font-weight:700; margin:3px 0;"><span class="zh">避震器假件</span><span class="en">Shock dummy</span></div><div class="mono" style="font-size:15px; color:var(--ink-3);"><span class="zh">用於 3 項測試 · 需求 ×3</span><span class="en">in 3 tests · demand ×3</span></div></div>
+            <span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">制具查詢</span><span class="en">Fixture lookup</span></div>
+    <div class="pno">08</div>
+  </section>
+
+  <!-- ============ 9 · STEP 7 EQUIPMENT LOOKUP ============ -->
+  <section class="slide grid" data-label="步驟七 設備查詢">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–05</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">06</span><span class="rt"><span class="zh">制具查詢</span><span class="en">Fixture</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">07</span><span class="rt"><span class="zh">設備查詢</span><span class="en">Equip. lookup</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">08–09</span><span class="rt"><span class="zh">盤點</span><span class="en">Stock</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div class="body">
+      <div class="col" style="justify-content:center; flex:.9;">
+        <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 07</span><span class="en">Step 07</span></span>
+        <h2 class="biglead anim" style="margin-top:16px; animation-delay:.1s"><span class="zh">對應設備怎麼查</span><span class="en">How to look up equipment</span></h2>
+        <p class="lead anim" style="animation-delay:.16s"><span class="zh">導覽列 <b>「設備盤點」</b> 頁列出每項設備用在哪些測試。需求量為所有測試的 <b>最高單次用量</b>（設備共用、不累加）。</span><span class="en">The <b>Equipment</b> page lists which tests use each machine. Demand is the <b>peak per-test usage</b> across all tests (shared, not summed).</span></p>
+        <div class="note anim" style="animation-delay:.24s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span class="zh">致動器用於 13 項測試，但需求 = <b>最高的 2 支</b>，不是相加 26。</span><span class="en">The actuator is in 13 tests, but demand = the <b>peak 2</b>, not 26 summed.</span></div>
+      </div>
+      <div class="col anim" style="animation-delay:.2s; justify-content:center;">
+        <div class="card" style="padding:30px 34px;">
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid var(--line); border-radius:6px; margin-bottom:14px;">
+            <span style="width:64px;height:64px;border-radius:6px;background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent);display:grid;place-items:center;flex:none;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span>
+            <div style="flex:1;"><div style="font-size:22px; font-weight:700;"><span class="zh">伺服液壓致動器</span><span class="en">Servo-hydraulic actuator</span></div><div class="mono" style="font-size:15px; color:var(--ink-3); margin-top:3px;">ACT-SH · <span class="zh">用於 13 項</span><span class="en">in 13 tests</span></div></div>
+            <div style="text-align:right;"><div class="mono" style="font-size:14px;color:var(--ink-3);"><span class="zh">需求(最高)</span><span class="en">Peak</span></div><div style="font-size:30px;font-weight:800;color:var(--accent);">2</div></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid var(--line); border-radius:6px;">
+            <span style="width:64px;height:64px;border-radius:6px;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><line x1="7" y1="20" x2="17" y2="20"/></svg></span>
+            <div style="flex:1;"><div style="font-size:22px; font-weight:700;"><span class="zh">數據擷取系統</span><span class="en">DAQ &amp; control</span></div><div class="mono" style="font-size:15px; color:var(--ink-3); margin-top:3px;">SYS-DAQ</div></div>
+            <div style="text-align:right;"><div class="mono" style="font-size:14px;color:var(--ink-3);"><span class="zh">需求(最高)</span><span class="en">Peak</span></div><div style="font-size:30px;font-weight:800;color:var(--accent);">2</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">設備查詢</span><span class="en">Equipment lookup</span></div>
+    <div class="pno">09</div>
+  </section>
+
+  <!-- ============ 10 · STEP 8 FIXTURE STOCK-TAKE ============ -->
+  <section class="slide grid" data-label="步驟八 庫存盤點">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–07</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">08</span><span class="rt"><span class="zh">庫存盤點</span><span class="en">Stock-take</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">09</span><span class="rt"><span class="zh">設備盤點</span><span class="en">Equip. count</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:8px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 08</span><span class="en">Step 08</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">庫存盤點：輸入制具實際數量並提交</span><span class="en">Stock-take: enter your fixture counts and submit</span></h2>
+    </div>
+    <p class="lead anim" style="animation-delay:.14s; margin:12px 0 24px;"><span class="zh">在 <b>「庫存盤點」</b> 頁，每個制具用 <b>＋／－</b> 或直接輸入實際數量。需求為<b>累加</b>；不足會標記短缺。輸入即自動儲存並同步。</span><span class="en">On <b>Stock-take</b>, set each fixture's actual quantity with <b>＋／−</b> or typing. Demand is <b>summed</b>; shortfalls are flagged. Entries auto-save and sync.</span></p>
+
+    <div class="stk">
+      <div class="stkrow anim" style="animation-delay:.18s"><div><div class="sk-n"><span class="zh">避震器假件</span><span class="en">Shock dummy</span></div><div class="sk-c">A37 · J845.1</div></div><div class="sk-need"><span class="zh">需求</span><span class="en">Need</span> 3</div><div class="stepper"><b>−</b><span class="val">3</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+      <div class="stkrow short anim" style="animation-delay:.26s"><div><div class="sk-n"><span class="zh">前叉假件</span><span class="en">Fork dummy</span></div><div class="sk-c">A1 · J068.1</div></div><div class="sk-need"><span class="zh">需求</span><span class="en">Need</span> 2</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-short"><span class="zh">短缺 −1</span><span class="en">short −1</span></span></div>
+      <div class="stkrow anim" style="animation-delay:.34s"><div><div class="sk-n"><span class="zh">前輪轂</span><span class="en">Front hub</span></div><div class="sk-c">A11 · J190.1</div></div><div class="sk-need"><span class="zh">需求</span><span class="en">Need</span> 1</div><div class="stepper"><b>−</b><span class="val">2</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+    </div>
+    <div class="note anim" style="animation-delay:.42s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="zh">粉紅底＝短缺，需補齊。完成後管理員在「制具盤點總覽」看到 DEMO 的回報。</span><span class="en">Pink = shortfall to top up. When done, the admin sees DEMO's counts in the fixture dashboard.</span></div>
+    <div class="ribbon"><span class="zh">庫存盤點</span><span class="en">Stock-take</span></div>
+    <div class="pno">10</div>
+  </section>
+
+  <!-- ============ 11 · STEP 9 EQUIPMENT COUNT ============ -->
+  <section class="slide grid" data-label="步驟九 設備盤點">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–07</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep done"><span class="rn">08</span><span class="rt"><span class="zh">庫存盤點</span><span class="en">Stock-take</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">09</span><span class="rt"><span class="zh">設備盤點</span><span class="en">Equip. count</span></span></div><div class="rconn"></div>
+      <div class="rstep"><span class="rn">10</span><span class="rt"><span class="zh">通知</span><span class="en">Alerts</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:8px;">
+      <span class="tag anim" style="animation-delay:.05s"><span class="zh">步驟 09</span><span class="en">Step 09</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">設備盤點：需求取最高，輸入後提交</span><span class="en">Equipment count: demand is the max — enter and submit</span></h2>
+    </div>
+    <p class="lead anim" style="animation-delay:.14s; margin:12px 0 24px;"><span class="zh">在 <b>「設備盤點」</b> 頁輸入各設備的實際數量。需求＝所有測試的 <b>最高用量</b>（設備可共用，不累加）。同樣即時儲存並同步。</span><span class="en">On the <b>Equipment</b> page enter each machine's actual quantity. Demand = the <b>peak usage</b> across all tests (shared, not summed). Auto-saves and syncs.</span></p>
+
+    <div class="stk">
+      <div class="stkrow anim" style="animation-delay:.18s"><div><div class="sk-n"><span class="zh">萬用試驗機</span><span class="en">Universal test machine</span></div><div class="sk-c">TM-UNI · <span class="zh">用於 6 項</span><span class="en">in 6 tests</span></div></div><div class="sk-need"><span class="zh">最高</span><span class="en">Max</span> 1</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+      <div class="stkrow short anim" style="animation-delay:.26s"><div><div class="sk-n"><span class="zh">伺服液壓致動器</span><span class="en">Servo-hydraulic actuator</span></div><div class="sk-c">ACT-SH · <span class="zh">用於 13 項</span><span class="en">in 13 tests</span></div></div><div class="sk-need"><span class="zh">最高</span><span class="en">Max</span> 2</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-short"><span class="zh">短缺 −1</span><span class="en">short −1</span></span></div>
+      <div class="stkrow anim" style="animation-delay:.34s"><div><div class="sk-n"><span class="zh">數據擷取系統</span><span class="en">DAQ &amp; control</span></div><div class="sk-c">SYS-DAQ · <span class="zh">用於 9 項</span><span class="en">in 9 tests</span></div></div><div class="sk-need"><span class="zh">最高</span><span class="en">Max</span> 2</div><div class="stepper"><b>−</b><span class="val">2</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+    </div>
+    <div class="note anim" style="animation-delay:.42s"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span class="zh">注意需求欄是「最高」不是「加總」——這是設備與制具最大的差別。</span><span class="en">Note the "Max" column, not a sum — the key difference from fixtures.</span></div>
+    <div class="ribbon"><span class="zh">設備盤點</span><span class="en">Equipment count</span></div>
+    <div class="pno">11</div>
+  </section>
+
+  <!-- ============ 12 · STEP 10 CHANGE ALERTS + PINK ============ -->
+  <section class="slide grid" data-label="步驟十 變更通知">
+    <div class="rail anim">
+      <div class="rstep done"><span class="rn">01–09</span><span class="rt"><span class="zh">前段</span><span class="en">Earlier</span></span></div><div class="rconn"></div>
+      <div class="rstep cur"><span class="rn">10</span><span class="rt"><span class="zh">變更通知</span><span class="en">Change alerts</span></span></div>
+    </div>
+
+    <div style="display:flex; align-items:baseline; gap:18px; margin-bottom:20px;">
+      <span class="tag pink anim" style="animation-delay:.05s"><span class="zh">步驟 10</span><span class="en">Step 10</span></span>
+      <h2 class="stitle anim" style="font-size:44px; margin:0; animation-delay:.1s"><span class="zh">變更通知與「粉紅色」的意義</span><span class="en">Change alerts &amp; what "pink" means</span></h2>
+    </div>
+
+    <div class="body" style="gap:36px;">
+      <div class="col" style="flex:1;">
+        <div class="pinkcard anim" style="animation-delay:.16s">
+          <span class="bell"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="dotn">3</span></span>
+          <div><div class="pk-t"><span class="zh">右上角鈴鐺</span><span class="en">The bell (top-right)</span></div><div class="pk-d"><span class="zh">管理員新增／修改測試項目、制具、設備或版本時，鈴鐺會亮紅點。點開看變更清單與時間。</span><span class="en">When the admin adds or edits a test, fixture, equipment or version, the bell shows a red dot. Open it for the change list and time.</span></div></div>
+        </div>
+        <div class="pinkcard anim" style="animation-delay:.26s; margin-top:16px;">
+          <span class="pk-i"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>
+          <div><div class="pk-t"><span class="zh">粉紅底＝需要你注意</span><span class="en">Pink = needs your attention</span></div><div class="pk-d"><span class="zh">兩種情況會反粉紅：① 盤點<b>短缺</b>的項目；② 該制具／設備<b>被管理員變更過</b>、需要你重新確認盤點。</span><span class="en">Two cases turn pink: ① a <b>shortfall</b> at stock-take; ② a fixture/equipment the admin <b>changed</b> that you must re-check.</span></div></div>
+        </div>
+      </div>
+      <div class="col anim" style="flex:.85; animation-delay:.28s; justify-content:center;">
+        <div class="stk">
+          <div class="stkrow"><div><div class="sk-n"><span class="zh">前輪轂</span><span class="en">Front hub</span></div><div class="sk-c">A11 · <span class="zh">正常</span><span class="en">normal</span></div></div><div class="sk-need">1</div><div class="stepper"><b>−</b><span class="val">1</span><b>+</b></div><span class="badge-ok"><span class="zh">充足</span><span class="en">OK</span></span></div>
+          <div class="stkrow short"><div><div class="sk-n"><span class="zh">前叉假件</span><span class="en">Fork dummy</span></div><div class="sk-c" style="color:var(--pink);"><span class="zh">已變更 · 請重新確認</span><span class="en">changed · re-check</span></div></div><div class="sk-need">2</div><div class="stepper"><b>−</b><span class="val">2</span><b>+</b></div><span class="badge-short"><span class="zh">已變更</span><span class="en">changed</span></span></div>
+        </div>
+        <div class="figcap"><span class="zh">盤點列反粉紅 = 該項目被管理員更新過</span><span class="en">Pink row = this item was updated by the admin</span></div>
+      </div>
+    </div>
+    <div class="ribbon"><span class="zh">變更通知 · 粉紅提示</span><span class="en">Alerts · pink cues</span></div>
+    <div class="pno">12</div>
+  </section>
+
+  <!-- ============ 13 · RECAP ============ -->
+  <section class="slide dark" data-label="重點回顧 Recap">
+    <div class="kick anim"><span class="dot"></span><span class="zh">重點回顧</span><span class="en">Recap</span></div>
+    <h2 class="stitle anim" style="font-size:56px; margin:18px 0 30px; animation-delay:.05s"><span class="zh">十步走完，DEMO 帳號全流程就緒</span><span class="en">Ten steps — the DEMO flow, end to end</span></h2>
+    <div class="recap-list">
+      <div class="ritem anim" style="animation-delay:.12s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>登入 → 目前專案</b>：選 DEMO、輸入密碼，只看被分配的案子。</span><span class="en"><b>Login → Projects</b>: pick DEMO, enter the code, see only assigned work.</span></span></div>
+      <div class="ritem anim" style="animation-delay:.2s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>制具＋設備 → 安裝</b>：核對清單，上傳實拍對比官方圖。</span><span class="en"><b>Fixtures + equip → setup</b>: check the lists, upload a photo beside the official diagram.</span></span></div>
+      <div class="ritem anim" style="animation-delay:.28s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>報告 → 查詢 → 盤點</b>：填結果送出；制具<b>累加</b>、設備<b>取最高</b>。</span><span class="en"><b>Report → lookup → stock-take</b>: submit; fixtures <b>sum</b>, equipment takes the <b>max</b>.</span></span></div>
+      <div class="ritem anim" style="animation-delay:.36s"><span class="rc"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="rx"><span class="zh"><b>變更通知</b>：留意鈴鐺紅點，<b>粉紅</b>＝短缺或項目被變更需重新確認。</span><span class="en"><b>Alerts</b>: watch the bell; <b>pink</b> = shortfall or a changed item to re-check.</span></span></div>
+    </div>
+    <div class="ribbon"><span class="zh">完 · 供應商流程指引 v2</span><span class="en">End · Supplier Guide v2</span></div>
+    <div class="pno">13</div>
+  </section>
+
+</deck-stage>
+
+<script>
+  function setGuideLang(l){
+    document.documentElement.setAttribute('data-lang', l);
+    document.documentElement.setAttribute('lang', l === 'zh' ? 'zh-Hant' : 'en');
+    var z=document.getElementById('lang-zh'), e=document.getElementById('lang-en');
+    if(z&&e){ z.classList.toggle('on', l==='zh'); e.classList.toggle('on', l==='en'); }
+    try{ localStorage.setItem('guideV2Lang', l); }catch(err){}
+  }
+  (function(){ try{ var s=localStorage.getItem('guideV2Lang'); if(s) setGuideLang(s); }catch(err){} })();
+</script>
+<script src="deck-stage.js"></script>
+</body>
+</html>
