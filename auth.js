@@ -10,6 +10,15 @@
     { id: "tektro", name: { zh: "彥豪金屬 Tektro", en: "Tektro Technology" }, code: "1234" },
   ];
   const ADMIN = { id: "admin", role: "admin", name: { zh: "品管部 管理員", en: "QC Administrator" } };
+  // Authorized Google emails for admin quick sign-in (keep in sync with
+  // firestore.rules and storage.rules isAdmin() email allowlist).
+  const ADMIN_EMAILS = [
+    "pc007ya@gmail.com",
+  ];
+  function isAdminEmail(email) {
+    if (!email || typeof email !== "string") return false;
+    return ADMIN_EMAILS.includes(email.trim().toLowerCase());
+  }
   // Admin access code is verified against a SHA-256 hash (see store.js
   // admincode_get/admincode_set + window.bffSha256) — never stored or synced
   // as plaintext, since Firestore's rules let any signed-in visitor (incl.
@@ -73,5 +82,5 @@
     out.sort((a, b) => b.at - a.at);
     return out;
   }
-  window.AUTH = { VENDORS, ADMIN, get, set, logout, isAdmin, stockOf, loginLogOf, allLoginLogs };
+  window.AUTH = { VENDORS, ADMIN, ADMIN_EMAILS, isAdminEmail, get, set, logout, isAdmin, stockOf, loginLogOf, allLoginLogs };
 })();

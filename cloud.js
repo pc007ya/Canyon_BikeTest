@@ -16,7 +16,7 @@ const CLOUD = {
   message: "",
   user: null,
   configured: false,
-  setConfig, disableCloud, signIn, signOutCloud,
+  setConfig, disableCloud, signIn, signInAdmin, signOutCloud,
 };
 window.CLOUD = CLOUD;
 
@@ -42,13 +42,54 @@ setTimeout(emitStatus, 0);
 let _api = null;        // { auth, db, fns... }
 let _signInImpl = null;
 let _signOutImpl = null;
+let _verifyingAdmin = false;
+let _readyResolve = null;
+const _ready = new Promise((resolve) => { _readyResolve = resolve; });
 function signIn() { return _signInImpl ? _signInImpl() : Promise.resolve(); }
 function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve(); }
+
+/* Admin quick sign-in via Google popup: authenticates with Firebase GoogleAuthProvider,
+   verifies that the signed-in Google account is verified and in window.AUTH.ADMIN_EMAILS,
+   and signs out immediately if unauthorized. Returns the user profile on success. */
+async function signInAdmin() {
+  await _ready;
+  if (!_api || !_api.auth || !_api.authMod) {
+    const err = new Error("Cloud sync is unavailable");
+    err.code = "cloud-unavailable";
+    throw err;
+  }
+  const { auth, authMod } = _api;
+  const provider = new authMod.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  _verifyingAdmin = true;
+  try {
+    const cred = await authMod.signInWithPopup(auth, provider);
+    const user = cred && cred.user;
+    const email = user && user.email ? user.email.trim().toLowerCase() : "";
+    const allowed = !!(window.AUTH && window.AUTH.isAdminEmail && window.AUTH.isAdminEmail(email));
+    if (!user || !user.emailVerified || !allowed) {
+      _verifyingAdmin = false;
+      try { await authMod.signOut(auth); } catch (e) {}
+      const err = new Error("Not an authorized admin account");
+      err.code = "bff/not-admin";
+      err.email = email;
+      throw err;
+    }
+    const profile = { name: user.displayName, email: user.email, photo: user.photoURL };
+    CLOUD.user = profile;
+    _verifyingAdmin = false;
+    setStatus("online");
+    return profile;
+  } catch (e) {
+    _verifyingAdmin = false;
+    throw e;
+  }
+}
 
 (async function init() {
   const cfg = readConfig();
   CLOUD.configured = !!cfg;
-  if (!cfg) { setStatus("local"); return; }
+  if (!cfg) { setStatus("local"); _readyResolve(); return; }
   CLOUD.enabled = true;
   setStatus("connecting");
   try {
@@ -86,6 +127,7 @@ function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve
     }
 
     authMod.onAuthStateChanged(auth, (user) => {
+      if (_verifyingAdmin) return;
       // An admin must NOT stay on an anonymous connection: Firestore rejects
       // master-data writes from anyone but the Google admin, which would make
       // edits (e.g. add vendor) silently fail. Drop anon admins to local-only.
@@ -103,6 +145,13 @@ function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve
     // When the local user switches (login / logout / vendor pick), rebind the
     // sync so the correct role-based behaviour is active.
     window.addEventListener("bff:authchange", function () {
+      const u = window.AUTH && window.AUTH.get && window.AUTH.get();
+      // Admin signed out of the app -> also sign out the Google Firebase session
+      // so the login screen cleanly returns to anonymous read-only sync.
+      if (!u && auth.currentUser && !auth.currentUser.isAnonymous) {
+        authMod.signOut(auth);
+        return;
+      }
       // Admin on an anonymous session -> go local-only (no rejected writes).
       if (auth.currentUser && auth.currentUser.isAnonymous && roleIsAdmin()) {
         authMod.signOut(auth);
@@ -111,9 +160,11 @@ function signOutCloud() { return _signOutImpl ? _signOutImpl() : Promise.resolve
       if (auth.currentUser) { stopSync(); startSync(); }
       else maybeAnonSignIn();
     });
+    _readyResolve();
     maybeAnonSignIn();
   } catch (e) {
     setStatus("error", e && e.message ? e.message : String(e));
+    _readyResolve();
   }
 })();
 
@@ -183,6 +234,7 @@ async function readMaster(meta) {
   return JSON.parse(json);
 }
 function startSync() {
+  stopSync();
   const { db, fsMod } = _api;
   const dataRef = fsMod.doc(db, "bff", "data");
 

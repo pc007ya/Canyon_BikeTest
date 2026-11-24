@@ -328,17 +328,66 @@ function Login({ lang, setLang, t, onLogin }) {
   const [sel, setSel] = uState(null);
   const [code, setCode] = uState("");
   const [err, setErr] = uState("");
+  const [gBusy, setGBusy] = uState(false);
   const [, bumpLogin] = uState(0);
   const L = (o) => L2(o, lang);
   const isAdmin = mode === "admin";
+  const cloudConfigured = !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey) || !!(window.CLOUD && window.CLOUD.configured);
 
-  // Re-render when the vendor list / codes sync in from the cloud, so newly
+  // Re-render when the vendor list / codes or cloud status sync in, so newly
   // added vendors appear in the picker without a manual refresh.
   uEffect(() => {
     const h = () => bumpLogin((n) => n + 1);
     window.addEventListener("bff:datachange", h);
-    return () => window.removeEventListener("bff:datachange", h);
+    window.addEventListener("bff:cloudstatus", h);
+    return () => {
+      window.removeEventListener("bff:datachange", h);
+      window.removeEventListener("bff:cloudstatus", h);
+    };
   }, []);
+
+  async function googleSignIn() {
+    if (gBusy) return;
+    setErr("");
+    if (!window.CLOUD || !window.CLOUD.signInAdmin) {
+      setErr(lang === "zh" ? "雲端服務尚未就緒，請稍後再試或改用管理員密碼登入" : "Cloud service is not ready yet. Retry or sign in with admin password.");
+      return;
+    }
+    setGBusy(true);
+    try {
+      await window.CLOUD.signInAdmin();
+      onLogin(window.AUTH.ADMIN);
+    } catch (e) {
+      const c = e && e.code ? String(e.code) : "";
+      if (c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") {
+        // user closed the popup intentionally
+      } else if (c === "bff/not-admin") {
+        setErr(lang === "zh"
+          ? `此 Google 帳號${e.email ? `（${e.email}）` : ""}沒有管理員權限`
+          : `This Google account${e.email ? ` (${e.email})` : ""} is not authorized as admin`);
+      } else if (c === "auth/unauthorized-domain") {
+        setErr(lang === "zh"
+          ? "目前網域尚未加入 Firebase 授權網域，請至 Firebase Console 設定或改用密碼登入"
+          : "This domain is not in Firebase Authorized Domains. Add it in Firebase Console or use password.");
+      } else if (c === "auth/operation-not-supported-in-this-environment") {
+        setErr(lang === "zh"
+          ? "此環境不支援 Google 彈出登入（如本機檔案開啟），請改用管理員密碼登入"
+          : "Google popup sign-in is unsupported in this environment (e.g. file://). Use admin password instead.");
+      } else if (c === "auth/popup-blocked") {
+        setErr(lang === "zh"
+          ? "瀏覽器已封鎖登入視窗，請允許彈出式視窗後再試"
+          : "Sign-in popup was blocked by the browser. Please allow popups and retry.");
+      } else if (c === "cloud-unavailable") {
+        setErr(lang === "zh"
+          ? "雲端服務尚未連線或已停用，請改用管理員密碼登入"
+          : "Cloud sync is unavailable or disabled. Please sign in with admin password.");
+      } else {
+        setErr((lang === "zh" ? "Google 登入失敗：" : "Google sign-in failed: ") + (e && e.message ? e.message : String(e)));
+      }
+    } finally {
+      setGBusy(false);
+    }
+  }
 
   async function submit(e) {
     if (e) e.preventDefault();
@@ -426,8 +475,23 @@ function Login({ lang, setLang, t, onLogin }) {
               <span className="vo-ava admin-ava"><Icon name="shield" size={16} /></span>
               <span className="vo-name">{L(window.AUTH.ADMIN.name)}</span>
             </div>
+            {cloudConfigured &&
+            <React.Fragment>
+                <button type="button" className="login-google" onClick={googleSignIn} disabled={gBusy}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33A9 9 0 0 0 9 18z" />
+                    <path fill="#FBBC05" d="M3.97 10.71A5.41 5.41 0 0 1 3.69 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3.01-2.33z" />
+                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
+                  </svg>
+                  <span>{gBusy ? (lang === "zh" ? "Google 驗證中…" : "Signing in with Google…") : (lang === "zh" ? "以 Google 帳號快速登入" : "Sign in with Google")}</span>
+                </button>
+                <p className="login-google-hint">{lang === "zh" ? "授權管理員一次完成登入與雲端同步" : "Authorized admin signs in & syncs cloud in one step"}</p>
+                <div className="login-or"><span>{lang === "zh" ? "或使用管理員密碼" : "or use admin password"}</span></div>
+              </React.Fragment>
+            }
             <div className="login-label">{lang === "zh" ? "管理員密碼" : "Admin password"}</div>
-            <input className="login-input mono" type="password" value={code} autoFocus
+            <input className="login-input mono" type="password" value={code}
           onChange={(e) => {setCode(e.target.value);setErr("");}}
           placeholder={lang === "zh" ? "請輸入存取碼" : "Enter access code"} autoComplete="off" />
           </React.Fragment>
@@ -435,7 +499,7 @@ function Login({ lang, setLang, t, onLogin }) {
 
         {err && <div className="login-err"><Icon name="x" size={14} />{err}</div>}
 
-        <button className="btn login-btn" type="submit">
+        <button className="btn login-btn" type="submit" disabled={gBusy}>
           <Icon name="logout" size={16} />{lang === "zh" ? "登入系統" : "Sign in"}
         </button>
         {!isAdmin &&
